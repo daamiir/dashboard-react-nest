@@ -30,26 +30,32 @@ export function DashboardPieChart() {
         <CardDescription>Target you’ve set for each month</CardDescription>
       </CardHeader>
       <CardContent className="p-0 flex-1 flex flex-col items-center justify-center my-4">
-        <div className="relative w-full">
-          <ChartContainer config={chartConfig} >
-            <PieChart>
-              <Pie
-                data={chartData}
-                cx="50%"
-                cy="50%"
-                innerRadius="90%"
-                outerRadius="100%"
-                startAngle={180}
-                endAngle={0}
-                dataKey="value"
-                stroke="none"
-                cornerRadius={50}
-                paddingAngle={3}
-              />
-            </PieChart>
-          </ChartContainer>
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center justify-end text-center">
-            <span className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
+        <div className="relative w-full max-w-[320px] mx-auto overflow-hidden aspect-[2/1]">
+          <div className="absolute inset-x-0 top-0 aspect-square">
+            <ChartContainer
+              config={chartConfig}
+              className="!aspect-auto h-full"
+            >
+              <PieChart>
+                <Pie
+                  data={chartData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius="90%"
+                  outerRadius="100%"
+                  startAngle={180}
+                  endAngle={0}
+                  dataKey="value"
+                  stroke="none"
+                  cornerRadius={8}
+                  paddingAngle={3}
+                />
+              </PieChart>
+            </ChartContainer>
+          </div>
+
+          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 flex flex-col items-center text-center">
+            <span className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
               75.55%
             </span>
             <span className="mt-1 px-2 py-0.5 text-xs font-semibold rounded-full bg-green-100 border-green-200 text-green-600 dark:bg-green-900/30 dark:text-green-400">
@@ -57,7 +63,8 @@ export function DashboardPieChart() {
             </span>
           </div>
         </div>
-        <div className="mt-2 text-sm text-muted-foreground text-center">
+
+        <div className="mt-4 text-sm text-muted-foreground text-center">
           You earn $3287 today, it's higher than last month. Keep up your good
           work!
         </div>
