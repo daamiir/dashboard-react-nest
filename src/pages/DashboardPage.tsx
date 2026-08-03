@@ -3,6 +3,7 @@ import {
   DashboardBarChart,
   DashboardCard,
   DashboardPieChart,
+  RecentOrders
 } from "@/modules/dashboard";
 import { Users, Box } from "lucide-react";
 
@@ -31,6 +32,9 @@ const DashboardPage = () => {
       </div>
       <div className="col-span-12 xl:col-span-5">
         <CustomerDemographics />
+      </div>
+      <div className="col-span-12 xl:col-span-7">
+        <RecentOrders />
       </div>
     </div>
   );
