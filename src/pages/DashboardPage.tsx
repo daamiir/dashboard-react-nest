@@ -1,4 +1,5 @@
 import {
+  CustomerDemographics,
   DashboardBarChart,
   DashboardCard,
   DashboardPieChart,
@@ -27,6 +28,9 @@ const DashboardPage = () => {
       </div>
       <div className="col-span-12 flex flex-col xl:col-span-5">
         <DashboardPieChart />
+      </div>
+      <div className="col-span-12 xl:col-span-5">
+        <CustomerDemographics />
       </div>
     </div>
   );
