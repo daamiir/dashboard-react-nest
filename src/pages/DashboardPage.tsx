@@ -1,9 +1,13 @@
-import { DashboardBarChart, DashboardCard } from "@/modules/dashboard";
+import {
+  DashboardBarChart,
+  DashboardCard,
+  DashboardPieChart,
+} from "@/modules/dashboard";
 import { Users, Box } from "lucide-react";
 
 const DashboardPage = () => {
   return (
-    <div className="grid grid-cols-12 gap-4 md:gap-6">
+    <div className="grid grid-cols-12 gap-4 items-stretch md:gap-6">
       <div className="col-span-12 space-y-6 xl:col-span-7">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6">
           <DashboardCard
@@ -20,6 +24,9 @@ const DashboardPage = () => {
           />
         </div>
         <DashboardBarChart />
+      </div>
+      <div className="col-span-12 flex flex-col xl:col-span-5">
+        <DashboardPieChart />
       </div>
     </div>
   );

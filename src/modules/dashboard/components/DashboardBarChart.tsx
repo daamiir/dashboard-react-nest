@@ -8,8 +8,6 @@ import {
   type ChartConfig,
 } from "@/components/ui/chart";
 
-export const description = "A bar chart";
-
 const chartData = [
   { month: "January", desktop: 168 },
   { month: "February", desktop: 385 },

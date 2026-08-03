@@ -20,7 +20,7 @@ export const DashboardCard = ({ icon, title, value, change }: StatsCardProps) =>
   const Icon = isPositive ? MoveUp : MoveDown;
 
   return (
-    <Card className="rounded-2xl border border-gray-200 p-6 bg-white  dark:border-gray-800 dark:bg-white/3">
+    <Card className="rounded-2xl border border-gray-200 p-6 bg-white dark:border-gray-800 dark:bg-white/3">
       <CardHeader>
         <div className="flex items-center justify-center w-12 h-12 bg-gray-100 rounded-xl dark:bg-gray-800">
           {icon}

@@ -6,6 +6,7 @@ export function AppRoutes() {
   return (
     <Routes>
       <Route path="/dashboard" element={<DashboardPage />} />
+      <Route path="/" element={<DashboardPage />} />
       <Route path="/*" element={<NotFoundPage />} />
     </Routes>
   );
