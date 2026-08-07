@@ -1,15 +1,19 @@
+import { lazy, Suspense } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
-import NotFoundPage from "@/pages/NotFoundPage";
-import DashboardPage from "@/pages/DashboardPage";
-import AddProductPage from "@/pages/e-commerce/AddProductPage";
+
+const DashboardPage = lazy(() => import("@/pages/DashboardPage"));
+const AddProductPage = lazy(() => import("@/pages/e-commerce/AddProductPage"));
+const NotFoundPage = lazy(() => import("@/pages/NotFoundPage"));
 
 export function AppRoutes() {
   return (
-    <Routes>
-      <Route path="/" element={<Navigate to="/dashboard" replace />} />
-      <Route path="/dashboard" element={<DashboardPage />} />
-      <Route path="/e-commerce/add-product" element={<AddProductPage />} />
-      <Route path="*" element={<NotFoundPage />} />
-    </Routes>
+    <Suspense fallback={<div className="p-6">Loading…</div>}>
+      <Routes>
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/e-commerce/add-product" element={<AddProductPage />} />
+        <Route path="*" element={<NotFoundPage />} />
+      </Routes>
+    </Suspense>
   );
 }
