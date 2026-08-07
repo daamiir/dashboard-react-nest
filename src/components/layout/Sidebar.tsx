@@ -21,29 +21,21 @@ const data: { navMain: NavItem[] } = {
           title: "Home",
           url: "/dashboard/",
         },
-        {
-          title: "Sub Item 1",
-          url: "/dashboard/sub-item-1",
-        },
-        {
-          title: "Sub Item 2",
-          url: "/dashboard/sub-item-2",
-        },
       ],
     },
     {
-      title: "Ecommerce",
-      url: "/ecommerce",
+      title: "E-commerce",
+      url: "/e-commerce",
       icon: ShoppingCart,
       isActive: false,
       items: [
         {
           title: "Products",
-          url: "/ecommerce/products",
+          url: "/e-commerce/products",
         },
         {
-          title: "Orders",
-          url: "/ecommerce/orders",
+          title: "Add Product",
+          url: "/e-commerce/add-product",
         },
       ],
     },
