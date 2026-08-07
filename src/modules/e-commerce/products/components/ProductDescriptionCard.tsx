@@ -14,7 +14,7 @@ import { DimensionsFields } from "./DimensionsFields";
 export const ProductDescriptionCard = () => {
   return (
     <Card className="px-6 py-4">
-      <CardHeader className="border-b">
+      <CardHeader>
         <CardTitle>Products Description</CardTitle>
       </CardHeader>
       <CardContent className="pt-6 space-y-6">

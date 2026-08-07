@@ -20,7 +20,7 @@ export const PricingAvailabilityCard = ({
 }: PricingAvailabilityCardProps) => {
   return (
     <Card className="px-6 py-4">
-      <CardHeader className="border-b">
+      <CardHeader>
         <CardTitle>
           Pricing &amp; Availability
         </CardTitle>

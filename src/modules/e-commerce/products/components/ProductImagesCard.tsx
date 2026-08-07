@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 export const ProductImagesCard = () => {
   return (
     <Card className="px-6 py-4">
-      <CardHeader className="border-b">
+      <CardHeader>
         <CardTitle>
           Products Images
         </CardTitle>
