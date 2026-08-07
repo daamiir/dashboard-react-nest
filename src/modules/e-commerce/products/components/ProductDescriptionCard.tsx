@@ -13,12 +13,12 @@ import { DimensionsFields } from "./DimensionsFields";
 
 export const ProductDescriptionCard = () => {
   return (
-    <Card className="px-6 py-4">
+    <Card className="px-4 py-4 sm:px-6">
       <CardHeader>
         <CardTitle>Products Description</CardTitle>
       </CardHeader>
       <CardContent className="pt-6 space-y-6">
-        <div className="grid grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
           <div className="space-y-2">
             <Label>Product Name</Label>
             <Input placeholder="Enter product name" />
@@ -38,7 +38,7 @@ export const ProductDescriptionCard = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
           <div className="space-y-2">
             <Label>Brand</Label>
             <Select>

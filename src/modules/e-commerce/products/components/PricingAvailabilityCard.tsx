@@ -21,12 +21,10 @@ export const PricingAvailabilityCard = ({
   return (
     <Card className="px-6 py-4">
       <CardHeader>
-        <CardTitle>
-          Pricing &amp; Availability
-        </CardTitle>
+        <CardTitle>Pricing &amp; Availability</CardTitle>
       </CardHeader>
       <CardContent className="pt-6">
-        <div className="grid grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
           <div className="space-y-2">
             <Label>Stock Quantity</Label>
             <StockQuantityInput value={stock} onChange={onStockChange} />

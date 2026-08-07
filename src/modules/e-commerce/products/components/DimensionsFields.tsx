@@ -3,7 +3,7 @@ import { Label } from "@/components/ui/label";
 
 export const DimensionsFields = () => {
   return (
-    <div className="grid grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
       <div className="space-y-2">
         <Label>Weight (KG)</Label>
         <Input type="number" placeholder="15" />
