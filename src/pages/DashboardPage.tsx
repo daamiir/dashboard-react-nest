@@ -9,7 +9,7 @@ import { Users, Box } from "lucide-react";
 
 const DashboardPage = () => {
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
+    <div className="max-w-7xl mx-auto space-y-6">
       <div className="grid grid-cols-12 gap-4 items-stretch md:gap-6">
         <div className="col-span-12 space-y-6 xl:col-span-7">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6">

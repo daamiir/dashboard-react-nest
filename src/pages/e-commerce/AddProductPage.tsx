@@ -10,7 +10,7 @@ const AddProductPage = () => {
   const [stock, setStock] = useState(1);
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className="max-w-7xl mx-auto">
       <h1 className="text-xl font-semibold mb-4">Add Product</h1>
 
       <div className="space-y-6">
