@@ -30,6 +30,10 @@ const data: { navMain: NavItem[] } = {
       isActive: false,
       items: [
         {
+          title: "Products",
+          url: "/e-commerce/products",
+        },
+        {
           title: "Add Product",
           url: "/e-commerce/add-product",
         },

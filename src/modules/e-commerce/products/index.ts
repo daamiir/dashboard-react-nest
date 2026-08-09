@@ -1,3 +1,4 @@
+export * from "./components/ProductsListCard"
 export * from "./components/DimensionsFields";
 export * from "./components/PricingAvailabilityCard";
 export * from "./components/ProductDescriptionCard";
