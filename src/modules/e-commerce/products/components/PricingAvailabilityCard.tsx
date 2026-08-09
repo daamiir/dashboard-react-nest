@@ -19,7 +19,7 @@ export const PricingAvailabilityCard = ({
   onStockChange,
 }: PricingAvailabilityCardProps) => {
   return (
-    <Card className="px-6 py-4">
+    <Card className="px-6 py-4 sm:px-6 rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 dark:border-gray-800 dark:bg-white/3">
       <CardHeader>
         <CardTitle>Pricing &amp; Availability</CardTitle>
       </CardHeader>
