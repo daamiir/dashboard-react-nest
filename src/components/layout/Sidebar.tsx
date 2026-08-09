@@ -19,7 +19,7 @@ const data: { navMain: NavItem[] } = {
       items: [
         {
           title: "Home",
-          url: "/dashboard/",
+          url: "/dashboard",
         },
       ],
     },
@@ -29,10 +29,6 @@ const data: { navMain: NavItem[] } = {
       icon: ShoppingCart,
       isActive: false,
       items: [
-        {
-          title: "Products",
-          url: "/e-commerce/products",
-        },
         {
           title: "Add Product",
           url: "/e-commerce/add-product",
