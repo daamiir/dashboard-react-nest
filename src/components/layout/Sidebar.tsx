@@ -2,7 +2,6 @@ import {
   Sidebar as SidebarComponent,
   SidebarContent,
   SidebarFooter,
-  SidebarGroup,
   SidebarHeader,
 } from "@/components/ui/sidebar";
 import { LayoutDashboard, ShoppingCart } from "lucide-react";
@@ -48,7 +47,6 @@ const Sidebar = () => {
       <SidebarHeader />
       <SidebarContent>
         <NavMain items={data.navMain} />
-        <SidebarGroup />
       </SidebarContent>
       <SidebarFooter />
     </SidebarComponent>

@@ -1,6 +1,6 @@
 "use client";
 
-import { Link } from "react-router";
+import { Link, useLocation } from "react-router";
 
 import { ChevronDown, type LucideIcon } from "lucide-react";
 
@@ -36,47 +36,60 @@ export function NavMain({
   }[];
 }) {
   const { isMobile, setOpenMobile } = useSidebar();
+  const location = useLocation();
 
   return (
     <SidebarGroup>
       <SidebarGroupLabel>MENU</SidebarGroupLabel>
       <SidebarMenu>
-        {items.map((item) => (
-          <Collapsible
-            key={item.title}
-            asChild
-            defaultOpen={item.isActive}
-            className="group/collapsible"
-          >
-            <SidebarMenuItem>
-              <CollapsibleTrigger asChild>
-                <SidebarMenuButton>
-                  {item.icon && <item.icon />}
-                  <span>{item.title}</span>
-                  <ChevronDown className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-180" />
-                </SidebarMenuButton>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <SidebarMenuSub>
-                  {item.items?.map((subItem) => (
-                    <SidebarMenuSubItem key={subItem.title}>
-                      <SidebarMenuSubButton asChild>
-                        <Link
-                          to={subItem.url}
-                          onClick={() => {
-                            if (isMobile) setOpenMobile(false);
-                          }}
-                        >
-                          <span>{subItem.title}</span>
-                        </Link>
-                      </SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                  ))}
-                </SidebarMenuSub>
-              </CollapsibleContent>
-            </SidebarMenuItem>
-          </Collapsible>
-        ))}
+        {items.map((item) => {
+          const isChildActive = item.items?.some(
+            (subItem) => location.pathname === subItem.url
+          );
+          
+          const isParentActive =
+            location.pathname === item.url || isChildActive;
+
+          return (
+            <Collapsible
+              key={item.title}
+              asChild
+              defaultOpen={isParentActive}
+              className="group/collapsible"
+            >
+              <SidebarMenuItem>
+                <CollapsibleTrigger asChild>
+                  <SidebarMenuButton isActive={isParentActive}>
+                    {item.icon && <item.icon />}
+                    <span>{item.title}</span>
+                    <ChevronDown className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-180" />
+                  </SidebarMenuButton>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <SidebarMenuSub>
+                    {item.items?.map((subItem) => {
+                      const isSubActive = location.pathname === subItem.url;
+                      return (
+                        <SidebarMenuSubItem key={subItem.title}>
+                          <SidebarMenuSubButton asChild isActive={isSubActive}>
+                            <Link
+                              to={subItem.url}
+                              onClick={() => {
+                                if (isMobile) setOpenMobile(false);
+                              }}
+                            >
+                              <span>{subItem.title}</span>
+                            </Link>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                      );
+                    })}
+                  </SidebarMenuSub>
+                </CollapsibleContent>
+              </SidebarMenuItem>
+            </Collapsible>
+          );
+        })}
       </SidebarMenu>
     </SidebarGroup>
   );
