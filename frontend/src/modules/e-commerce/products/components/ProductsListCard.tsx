@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowUpDown,
@@ -48,7 +48,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/utils/cn";
 
 import { useDeleteProduct, useProducts } from "../hooks/useProducts";
-import type { Product, ProductSortField, SortDirection } from "../types";
+import type { Product, SortBy, SortOrder } from "../types";
+import { useDebounce } from "@/hooks/useDebounce";
 
 const PAGE_SIZE = 7;
 
@@ -82,7 +83,7 @@ const formatDate = (iso: string) => {
   return `${day} ${month}, ${date.getFullYear()}`;
 };
 
-const SORTABLE_COLUMNS: { field: ProductSortField; label: string }[] = [
+const SORTABLE_COLUMNS: { field: SortBy; label: string }[] = [
   { field: "name", label: "Products" },
   { field: "category", label: "Category" },
   { field: "brand", label: "Brand" },
@@ -91,54 +92,44 @@ const SORTABLE_COLUMNS: { field: ProductSortField; label: string }[] = [
 
 export const ProductsListCard = () => {
   const navigate = useNavigate();
-  const { data: products = [], isLoading, isError } = useProducts();
   const [search, setSearch] = useState("");
-  const [sortField, setSortField] = useState<ProductSortField | null>(null);
-  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
+  const debouncedSearch = useDebounce(search, 300);
+  const [sortBy, setSortBy] = useState<SortBy>("name");
+  const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
   const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const {
+    data: response,
+    isLoading,
+    isError,
+  } = useProducts({
+    search: debouncedSearch,
+    sortBy,
+    sortOrder,
+    page,
+    limit,
+  });
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
-  const filtered = useMemo(() => {
-    const query = search.trim().toLowerCase();
-    if (!query) return products;
-    return products.filter(
-      (product) =>
-        product.name.toLowerCase().includes(query) ||
-        product.category.toLowerCase().includes(query) ||
-        product.brand.toLowerCase().includes(query),
-    );
-  }, [search, products]);
-
-  const sorted = useMemo(() => {
-    if (!sortField) return filtered;
-    const copy = [...filtered];
-    copy.sort((a, b) => {
-      const aValue = a[sortField];
-      const bValue = b[sortField];
-      const result =
-        typeof aValue === "number" && typeof bValue === "number"
-          ? aValue - bValue
-          : String(aValue).localeCompare(String(bValue));
-      return sortDirection === "asc" ? result : -result;
-    });
-    return copy;
-  }, [filtered, sortField, sortDirection]);
-
-  const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
-  const currentPage = Math.min(page, totalPages);
-  const pageStart = (currentPage - 1) * PAGE_SIZE;
-  const pageProducts = sorted.slice(pageStart, pageStart + PAGE_SIZE);
+  const pageProducts = response?.data ?? [];
+  const totalPages = response?.meta.totalPages ?? 1;
+  const totalProducts = response?.meta.total ?? 0;
 
   const allOnPageSelected =
-    pageProducts.length > 0 &&
+    totalProducts > 0 &&
     pageProducts.every((product) => selectedIds.has(product.id));
 
-  const handleSort = (field: ProductSortField) => {
-    if (sortField === field) {
-      setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearch(e.target.value);
+    setPage(1);
+  };
+
+  const handleSort = (field: SortBy) => {
+    if (sortBy === field) {
+      setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
     } else {
-      setSortField(field);
-      setSortDirection("asc");
+      setSortBy(field);
+      setSortOrder("asc");
     }
     setPage(1);
   };
@@ -194,18 +185,40 @@ export const ProductsListCard = () => {
             <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               value={search}
-              onChange={(event) => {
-                setSearch(event.target.value);
-                setPage(1);
-              }}
+              onChange={handleChange}
               placeholder="Search..."
               className="pl-8"
             />
           </div>
-          <Button variant="outline" className="w-full sm:w-auto">
-            <SlidersHorizontal />
-            Filter
-          </Button>
+          <div className="flex items-center gap-4">
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                className="w-full sm:w-auto"
+                onClick={() => setLimit(5)}
+              >
+                5
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full sm:w-auto"
+                onClick={() => setLimit(10)}
+              >
+                10
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full sm:w-auto"
+                onClick={() => setLimit(20)}
+              >
+                20
+              </Button>
+            </div>
+            <Button variant="outline" className="w-full sm:w-auto">
+              <SlidersHorizontal />
+              Filter
+            </Button>
+          </div>
         </div>
 
         {/* Mobile version*/}
@@ -218,7 +231,7 @@ export const ProductsListCard = () => {
               onToggle={() => toggleRow(product.id)}
             />
           ))}
-          {pageProducts.length === 0 && (
+          {totalProducts === 0 && (
             <p className="py-10 text-center text-sm text-muted-foreground">
               No products match your search.
             </p>
@@ -248,7 +261,7 @@ export const ProductsListCard = () => {
                       <ArrowUpDown
                         className={cn(
                           "size-3.5",
-                          sortField === field && "text-foreground",
+                          sortBy === field && "text-foreground",
                         )}
                       />
                     </button>
@@ -263,7 +276,7 @@ export const ProductsListCard = () => {
             </TableHeader>
             <TableBody>
               {isLoading && (
-                <TableBody>
+                <>
                   {Array.from({ length: PAGE_SIZE }).map((_, i) => (
                     <TableRow key={i}>
                       <TableCell colSpan={7}>
@@ -271,7 +284,7 @@ export const ProductsListCard = () => {
                       </TableCell>
                     </TableRow>
                   ))}
-                </TableBody>
+                </>
               )}
 
               {isError && (
@@ -285,7 +298,7 @@ export const ProductsListCard = () => {
                 </TableRow>
               )}
 
-              {!isLoading && !isError && pageProducts.length === 0 && (
+              {!isLoading && !isError && totalProducts === 0 && (
                 <TableRow>
                   <TableCell
                     colSpan={7}
@@ -312,14 +325,14 @@ export const ProductsListCard = () => {
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm text-muted-foreground">
-            Showing {sorted.length === 0 ? 0 : pageStart + 1} to{" "}
-            {Math.min(pageStart + PAGE_SIZE, sorted.length)} of {sorted.length}
+            Showing {totalProducts === 0 ? 0 : (page - 1) * limit + 1} to{" "}
+            {Math.min(page * limit, totalProducts)} of {totalProducts}
           </p>
           <div className="flex items-center justify-center gap-1.5">
             <Button
               variant="outline"
               size="icon"
-              disabled={currentPage === 1}
+              disabled={page === 1}
               onClick={() => setPage((p) => Math.max(1, p - 1))}
             >
               <ChevronLeft />
@@ -330,7 +343,7 @@ export const ProductsListCard = () => {
                 (pageNumber) => (
                   <Button
                     key={pageNumber}
-                    variant={pageNumber === currentPage ? "default" : "outline"}
+                    variant={pageNumber === page ? "default" : "outline"}
                     size="icon"
                     onClick={() => setPage(pageNumber)}
                   >
@@ -340,13 +353,13 @@ export const ProductsListCard = () => {
               )}
             </div>
             <span className="px-2 text-sm font-medium sm:hidden">
-              Page {currentPage} of {totalPages}
+              Page {page} of {totalPages}
             </span>
 
             <Button
               variant="outline"
               size="icon"
-              disabled={currentPage === totalPages}
+              disabled={page === totalPages}
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             >
               <ChevronRight />
