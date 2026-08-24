@@ -1,5 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { useForm, FormProvider } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import {
   ProductDescriptionCard,
@@ -9,6 +11,10 @@ import {
   useProduct,
   useUpdateProduct,
 } from "@/modules/e-commerce/products/hooks/useProducts";
+import {
+  productSchema,
+  type ProductFormValues,
+} from "@/modules/e-commerce/products/schema";
 
 const EditProductPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -16,25 +22,32 @@ const EditProductPage = () => {
   const { data: product, isLoading } = useProduct(id);
   const updateProduct = useUpdateProduct();
 
-  const [name, setName] = useState("");
-  const [category, setCategory] = useState("");
-  const [brand, setBrand] = useState("");
-  const [price, setPrice] = useState(0);
-  const [stock, setStock] = useState(1);
+  const methods = useForm<ProductFormValues>({
+    resolver: zodResolver(productSchema),
+    defaultValues: {
+      name: "",
+      category: "",
+      brand: "",
+      price: 0,
+      stockQuantity: 1,
+    },
+  });
 
   useEffect(() => {
     if (!product) return;
-    setName(product.name);
-    setCategory(product.category);
-    setBrand(product.brand);
-    setPrice(product.price);
-    setStock(product.stockQuantity);
-  }, [product]);
+    methods.reset({
+      name: product.name,
+      category: product.category,
+      brand: product.brand,
+      price: product.price,
+      stockQuantity: product.stockQuantity,
+    });
+  }, [product, methods]);
 
-  const handleSave = () => {
+  const onSubmit = (data: ProductFormValues) => {
     if (!id) return;
     updateProduct.mutate(
-      { id, payload: { name, category, brand, price, stockQuantity: stock } },
+      { id, payload: data },
       { onSuccess: () => navigate("/e-commerce/products") },
     );
   };
@@ -46,51 +59,43 @@ const EditProductPage = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto">
-      <h1 className="text-xl font-semibold mb-4">Edit Product</h1>
+    <FormProvider {...methods}>
+      <form onSubmit={methods.handleSubmit(onSubmit)}>
+        <div className="max-w-7xl mx-auto">
+          <h1 className="text-xl font-semibold mb-4">Edit Product</h1>
 
-      <div className="space-y-6">
-        <div className="flex flex-col gap-6">
-          <ProductDescriptionCard
-            name={name}
-            onNameChange={setName}
-            category={category}
-            onCategoryChange={setCategory}
-            brand={brand}
-            onBrandChange={setBrand}
-          />
-          <PricingAvailabilityCard
-            price={price}
-            onPriceChange={setPrice}
-            stock={stock}
-            onStockChange={setStock}
-          />
+          <div className="space-y-6">
+            <div className="flex flex-col gap-6">
+              <ProductDescriptionCard />
+              <PricingAvailabilityCard />
+            </div>
+
+            {updateProduct.isError && (
+              <p className="text-sm text-destructive">
+                Couldn't save changes. Try again.
+              </p>
+            )}
+
+            <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3">
+              <Button
+                variant="outline"
+                className="w-full sm:w-auto"
+                onClick={() => navigate("/e-commerce/products")}
+              >
+                Cancel
+              </Button>
+              <Button
+                className="w-full sm:w-auto bg-green-600 hover:bg-green-700"
+                disabled={updateProduct.isPending}
+                type="submit"
+              >
+                {updateProduct.isPending ? "Saving…" : "Save Changes"}
+              </Button>
+            </div>
+          </div>
         </div>
-
-        {updateProduct.isError && (
-          <p className="text-sm text-destructive">
-            Couldn't save changes. Try again.
-          </p>
-        )}
-
-        <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3">
-          <Button
-            variant="outline"
-            className="w-full sm:w-auto"
-            onClick={() => navigate("/e-commerce/products")}
-          >
-            Cancel
-          </Button>
-          <Button
-            className="w-full sm:w-auto bg-green-600 hover:bg-green-700"
-            onClick={handleSave}
-            disabled={updateProduct.isPending}
-          >
-            {updateProduct.isPending ? "Saving…" : "Save Changes"}
-          </Button>
-        </div>
-      </div>
-    </div>
+      </form>
+    </FormProvider>
   );
 };
 
