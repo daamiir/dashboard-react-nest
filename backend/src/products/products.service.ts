@@ -44,6 +44,7 @@ export class ProductsService {
     ]);
 
     return {
+      success: true,
       data,
       meta: {
         total,
@@ -51,13 +52,22 @@ export class ProductsService {
         limit: limit!,
         totalPages: Math.ceil(total / limit!),
       },
+      timestamp: new Date().toISOString(),
     };
   }
 
   async findOne(id: string) {
     const product = await this.prisma.product.findUnique({ where: { id } });
     if (!product) throw new NotFoundException('Product not found');
-    return product;
+    return {
+      succes: true,
+      data: {
+        ...product,
+      },
+      meta: {
+        timestamp: new Date().toISOString(),
+      },
+    };
   }
 
   create(createProductDto: CreateProductDto) {
