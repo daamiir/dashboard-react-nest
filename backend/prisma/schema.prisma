@@ -20,3 +20,18 @@ model Product {
   @@index([brand])
   @@index([createdAt])
 }
+
+enum Role {
+  BUYER
+  SELLER
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  role         Role     @default(BUYER)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
