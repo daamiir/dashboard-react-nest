@@ -6,15 +6,15 @@ import { Button } from "@/components/ui/button";
 import {
   ProductDescriptionCard,
   PricingAvailabilityCard,
-} from "@/modules/e-commerce/products";
+} from "@/modules/products";
 import {
   useProduct,
   useUpdateProduct,
-} from "@/modules/e-commerce/products/hooks/useProducts";
+} from "@/modules/products/hooks/useProducts";
 import {
   productSchema,
   type ProductFormValues,
-} from "@/modules/e-commerce/products/schema";
+} from "@/modules/products/schema";
 
 const EditProductPage = () => {
   const { id } = useParams<{ id: string }>();

@@ -1,4 +1,4 @@
-import { ProductsListCard } from "@/modules/e-commerce/products";
+import { ProductsListCard } from "@/modules/products";
 
 const ProductsPage = () => {
   return (

@@ -5,12 +5,12 @@ import { Button } from "@/components/ui/button";
 import {
   ProductDescriptionCard,
   PricingAvailabilityCard,
-} from "@/modules/e-commerce/products";
-import { useCreateProduct } from "@/modules/e-commerce/products/hooks/useProducts";
+} from "@/modules/products";
+import { useCreateProduct } from "@/modules/products/hooks/useProducts";
 import {
   productSchema,
   type ProductFormValues,
-} from "@/modules/e-commerce/products/schema";
+} from "@/modules/products/schema";
 
 const AddProductPage = () => {
   const navigate = useNavigate();

@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FormInput } from "../../../auth/components/FormInput";
+import { FormInput } from "@/modules/products/components/FormInput";
 
 export const ProductDescriptionCard = () => {
   return (

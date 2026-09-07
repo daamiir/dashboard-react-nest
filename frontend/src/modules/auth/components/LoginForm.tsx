@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldDescription, FieldGroup } from "@/components/ui/field";
-import { FormInput } from "./FormInput";
+import { FormInput } from "../../products/components/FormInput";
 import { Link } from "react-router-dom";
 
 export const LoginForm = () => {
