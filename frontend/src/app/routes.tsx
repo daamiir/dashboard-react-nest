@@ -1,3 +1,4 @@
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { lazy, Suspense } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 
@@ -15,16 +16,28 @@ export function AppRoutes() {
   return (
     <Suspense fallback={<div className="p-6">Loading…</div>}>
       <Routes>
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        {/* Public routes */}
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/dashboard" element={<DashboardPage />} />
-        <Route path="/e-commerce/products" element={<ProductsPage />} />
-        <Route path="/e-commerce/add-product" element={<AddProductPage />} />
-        <Route
-          path="/e-commerce/edit-product/:id"
-          element={<EditProductPage />}
-        />
+        <Route path="/unauthorized" element={<div>Access Denied</div>} />
+
+        {/* Protected routes */}
+        <Route element={<ProtectedRoute />}>
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/e-commerce/products" element={<ProductsPage />} />
+        </Route>
+
+        {/* Protected routes for SELLER */}
+        <Route element={<ProtectedRoute allowedRoles={["SELLER"]} />}>
+          <Route path="/e-commerce/add-product" element={<AddProductPage />} />
+          <Route
+            path="/e-commerce/edit-product/:id"
+            element={<EditProductPage />}
+          />
+        </Route>
+
+        {/* Fallback 404 */}
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </Suspense>

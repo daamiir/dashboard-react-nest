@@ -1,3 +1,4 @@
+import { useAuthStore } from "@/modules/auth/store/useAuthStore";
 import type {
   PaginatedResponse,
   PaginationMeta,
@@ -50,9 +51,13 @@ export const productsApi = {
   },
 
   create: async (payload: CreateProductPayload): Promise<Product> => {
+    const ACCESS_TOKEN = useAuthStore.getState().token;
     const res = await fetch(BASE_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${ACCESS_TOKEN}`,
+      },
       body: JSON.stringify(payload),
     });
     const envelope = await handleResponse<Product>(res);
@@ -63,9 +68,13 @@ export const productsApi = {
     id: string,
     payload: UpdateProductPayload,
   ): Promise<Product> => {
+    const ACCESS_TOKEN = useAuthStore.getState().token;
     const res = await fetch(`${BASE_URL}/${id}`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${ACCESS_TOKEN}`,
+      },
       body: JSON.stringify(payload),
     });
     const envelope = await handleResponse<Product>(res);
@@ -73,7 +82,13 @@ export const productsApi = {
   },
 
   remove: async (id: string): Promise<Product> => {
-    const res = await fetch(`${BASE_URL}/${id}`, { method: "DELETE" });
+    const ACCESS_TOKEN = useAuthStore.getState().token;
+    const res = await fetch(`${BASE_URL}/${id}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${ACCESS_TOKEN}`,
+      },
+    });
     const envelope = await handleResponse<Product>(res);
     return envelope.data;
   },
