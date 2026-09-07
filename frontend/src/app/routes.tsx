@@ -1,7 +1,7 @@
 import { lazy, Suspense } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 
-const SignupPage = lazy(() => import("@/pages/auth/SignUpPage"));
+const SignupPage = lazy(() => import("@/pages/auth/SignupPage"));
 const LoginPage = lazy(() => import("@/pages/auth/LoginPage"));
 const DashboardPage = lazy(() => import("@/pages/DashboardPage"));
 const ProductsPage = lazy(() => import("@/pages/e-commerce/ProductsPage"));
