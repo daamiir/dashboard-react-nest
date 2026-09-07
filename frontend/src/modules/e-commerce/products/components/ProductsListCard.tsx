@@ -156,7 +156,7 @@ export const ProductsListCard = () => {
   };
 
   return (
-    <Card className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 dark:border-gray-800 dark:bg-white/3">
+    <Card className="rounded-2xl bg-white p-4 sm:p-6 dark:border-gray-800 dark:bg-white/3">
       <CardHeader className="flex flex-col gap-4 p-0 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-lg font-semibold">Products List</h1>
@@ -489,7 +489,7 @@ const ProductMobileCard = ({
   return (
     <div
       data-state={selected ? "selected" : undefined}
-      className="flex items-start gap-3 rounded-xl border border-gray-200 p-3 data-[state=selected]:bg-muted dark:border-gray-800"
+      className="flex items-start gap-3 rounded-xl p-3 data-[state=selected]:bg-muted dark:border-gray-800"
     >
       <Checkbox
         checked={selected}

@@ -1,10 +1,14 @@
 import { lazy, Suspense } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 
+const SignupPage = lazy(() => import("@/pages/auth/SignUpPage"));
+const LoginPage = lazy(() => import("@/pages/auth/LoginPage"));
 const DashboardPage = lazy(() => import("@/pages/DashboardPage"));
 const ProductsPage = lazy(() => import("@/pages/e-commerce/ProductsPage"));
 const AddProductPage = lazy(() => import("@/pages/e-commerce/AddProductPage"));
-const EditProductPage = lazy(() => import("@/pages/e-commerce/EditProductPage"));
+const EditProductPage = lazy(
+  () => import("@/pages/e-commerce/EditProductPage"),
+);
 const NotFoundPage = lazy(() => import("@/pages/NotFoundPage"));
 
 export function AppRoutes() {
@@ -12,11 +16,16 @@ export function AppRoutes() {
     <Suspense fallback={<div className="p-6">Loading…</div>}>
       <Routes>
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/signup" element={<SignupPage />} />
+        <Route path="/login" element={<LoginPage />} />
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/e-commerce/products" element={<ProductsPage />} />
         <Route path="/e-commerce/add-product" element={<AddProductPage />} />
-        <Route path="/e-commerce/edit-product/:id" element={<EditProductPage />} />
-        <Route path="*" element={<NotFoundPage />} /> 
+        <Route
+          path="/e-commerce/edit-product/:id"
+          element={<EditProductPage />}
+        />
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </Suspense>
   );

@@ -84,7 +84,7 @@ function WorldMap() {
 
 export const CustomerDemographics = () => {
   return (
-    <Card className="rounded-2xl border border-gray-200 p-6 bg-white dark:border-gray-800 dark:bg-white/3">
+    <Card className="rounded-2xl p-6 bg-white dark:border-gray-800 dark:bg-white/3">
       <CardHeader className="flex flex-row items-start justify-between p-0 space-y-0">
         <div>
           <CardTitle>Customers Demographic</CardTitle>

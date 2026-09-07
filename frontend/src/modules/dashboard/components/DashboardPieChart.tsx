@@ -24,7 +24,7 @@ const chartConfig = {
 
 export function DashboardPieChart() {
   return (
-    <Card className="h-full flex flex-col justify-between rounded-2xl border border-gray-200 p-6 bg-white dark:border-gray-800 dark:bg-white/3">
+    <Card className="h-full flex flex-col justify-between rounded-2xl p-6 bg-white dark:border-gray-800 dark:bg-white/3">
       <CardHeader>
         <CardTitle>Monthly Target</CardTitle>
         <CardDescription>Target you’ve set for each month</CardDescription>
@@ -94,4 +94,3 @@ export function DashboardPieChart() {
     </Card>
   );
 }
-    

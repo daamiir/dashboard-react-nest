@@ -1,9 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FormInput } from "./FormInput";
+import { FormInput } from "../../../auth/components/FormInput";
 
 export const ProductDescriptionCard = () => {
   return (
-    <Card className="px-4 py-4 sm:px-6 rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 dark:border-gray-800 dark:bg-white/3">
+    <Card className="px-4 py-4 sm:px-6 rounded-2xl bg-white p-4 sm:p-6 dark:border-gray-800 dark:bg-white/3">
       <CardHeader>
         <CardTitle>Products Description</CardTitle>
       </CardHeader>

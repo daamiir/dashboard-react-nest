@@ -32,7 +32,7 @@ const chartConfig = {
 
 export const DashboardBarChart = () => {
   return (
-    <Card className="overflow-hidden rounded-2xl border border-gray-200 bg-white px-5 pt-5 gap-4 dark:border-gray-800 dark:bg-white/[0.03] sm:px-6 sm:pt-6">
+    <Card className="overflow-hidden rounded-2xl bg-white px-5 pt-5 gap-4 dark:border-gray-800 dark:bg-white/[0.03] sm:px-6 sm:pt-6">
       <CardHeader>
         <CardTitle className="text-lg font-semibold text-gray-800 dark:text-white/90">
           Monthly Sales
@@ -63,7 +63,12 @@ export const DashboardBarChart = () => {
               cursor={false}
               content={<ChartTooltipContent hideLabel />}
             />
-            <Bar dataKey="desktop" fill="var(--color-desktop)" radius={4} barSize={30}/>
+            <Bar
+              dataKey="desktop"
+              fill="var(--color-desktop)"
+              radius={4}
+              barSize={30}
+            />
           </BarChart>
         </ChartContainer>
       </CardContent>
