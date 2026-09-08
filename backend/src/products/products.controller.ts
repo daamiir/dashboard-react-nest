@@ -27,6 +27,7 @@ export class ProductsController {
   }
 
   @Get('me')
+  @UseGuards(JwtAuthGuard)
   findMyProducts(
     @Query() query: FindProductsQueryDto,
     @CurrentUser() user: { id: string },
