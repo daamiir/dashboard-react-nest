@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FormInput } from "@/modules/products/components/FormInput";
+import { FormInput } from "@/modules/auth/components/FormInput";
 import { FormStepper } from "./FormStepper";
 
 export const PricingAvailabilityCard = () => {
