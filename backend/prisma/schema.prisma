@@ -16,9 +16,13 @@ model Product {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
+  sellerId      String
+  seller        User @relation(fields: [sellerId], references: [id])
+
   @@index([category])
   @@index([brand])
   @@index([createdAt])
+  @@index([sellerId])
 }
 
 enum Role {
@@ -34,4 +38,6 @@ model User {
   role         Role     @default(BUYER)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+
+  products  Product[]
 }

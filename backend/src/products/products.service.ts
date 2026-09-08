@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
@@ -54,28 +58,106 @@ export class ProductsService {
     };
   }
 
+  async findMyProducts(query: FindProductsQueryDto, sellerId: string) {
+    const { search, sortBy, sortOrder, page, limit } = query;
+
+    const skip = (page! - 1) * limit!;
+
+    const [data, total] = await Promise.all([
+      this.prisma.product.findMany({
+        where: {
+          sellerId,
+          ...(search
+            ? {
+                OR: [
+                  { name: { contains: search, mode: 'insensitive' } },
+                  { category: { contains: search, mode: 'insensitive' } },
+                  { brand: { contains: search, mode: 'insensitive' } },
+                ],
+              }
+            : {}),
+        },
+        orderBy: {
+          [sortBy!]: sortOrder,
+        },
+        skip,
+        take: limit,
+      }),
+      this.prisma.product.count({
+        where: {
+          sellerId,
+          ...(search
+            ? {
+                OR: [
+                  { name: { contains: search, mode: 'insensitive' } },
+                  { category: { contains: search, mode: 'insensitive' } },
+                  { brand: { contains: search, mode: 'insensitive' } },
+                ],
+              }
+            : {}),
+        },
+        orderBy: {
+          [sortBy!]: sortOrder,
+        },
+        skip,
+        take: limit,
+      }),
+      this.prisma.product.count({
+        where: search
+          ? {
+              OR: [
+                { name: { contains: search, mode: 'insensitive' } },
+                { category: { contains: search, mode: 'insensitive' } },
+                { brand: { contains: search, mode: 'insensitive' } },
+              ],
+            }
+          : {},
+      }),
+    ]);
+
+    return {
+      data,
+      meta: {
+        total,
+        page: page!,
+        limit: limit!,
+        totalPages: Math.ceil(total / limit!),
+      },
+    };
+  }
+
   async findOne(id: string) {
     const product = await this.prisma.product.findUnique({ where: { id } });
     if (!product) throw new NotFoundException('Product not found');
     return product;
   }
 
-  create(createProductDto: CreateProductDto) {
-    return this.prisma.product.create({ data: createProductDto });
+  create(sellerId: string, createProductDto: CreateProductDto) {
+    return this.prisma.product.create({
+      data: { ...createProductDto, sellerId },
+    });
   }
 
-  async update(id: string, updateProductDto: UpdateProductDto) {
+  async update(
+    id: string,
+    sellerId: string,
+    updateProductDto: UpdateProductDto,
+  ) {
     const product = await this.prisma.product.findUnique({ where: { id } });
     if (!product) throw new NotFoundException('Product not found');
+    if (product.sellerId !== sellerId)
+      throw new ForbiddenException('You are not the owner of this product');
     return this.prisma.product.update({
       where: { id },
       data: updateProductDto,
     });
   }
 
-  async remove(id: string) {
+  async remove(id: string, sellerId: string) {
     const product = await this.prisma.product.findUnique({ where: { id } });
     if (!product) throw new NotFoundException('Product not found');
+    if (product.sellerId !== sellerId)
+      throw new ForbiddenException('You are not the owner of this product');
     return this.prisma.product.delete({ where: { id } });
   }
 }

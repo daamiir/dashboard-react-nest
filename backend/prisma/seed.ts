@@ -1,6 +1,7 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Role } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
+import * as bcrypt from 'bcrypt';
 
 const connectionString = process.env.DATABASE_URL;
 const pool = new Pool({ connectionString });
@@ -177,19 +178,39 @@ function quantityFor(stock: string) {
 
 async function main() {
   await prisma.product.deleteMany();
-  for (const p of rawProducts) {
-    await prisma.product.create({
-      data: {
-        name: p.name,
-        category: p.category,
-        brand: p.brand,
-        price: p.price,
-        stockQuantity: quantityFor(p.stock),
-        createdAt: new Date(p.createdAt),
-      },
-    });
-  }
-  console.log(`Seeded ${rawProducts.length} products.`);
+
+  const passwordHash = await bcrypt.hash('Seller123!', 10);
+
+  const seller = await prisma.user.upsert({
+    where: { email: 'seller@demo.com' },
+    update: {},
+    create: {
+      email: 'seller@demo.com',
+      name: 'Demo Seller',
+      passwordHash,
+      role: Role.SELLER,
+    },
+  });
+
+  const sellerId = seller.id;
+
+  const productData = rawProducts.map((p) => ({
+    name: p.name,
+    category: p.category,
+    brand: p.brand,
+    price: p.price,
+    stockQuantity: quantityFor(p.stock),
+    createdAt: new Date(p.createdAt),
+    sellerId: seller.id,
+  }));
+
+  const result = await prisma.product.createMany({
+    data: productData,
+  });
+
+  console.log(
+    `Seeded ${result.count} products for seller ${seller.email} (${sellerId}).`,
+  );
 }
 
 main()
@@ -197,4 +218,7 @@ main()
     console.error(e);
     process.exit(1);
   })
-  .finally(async () => await prisma.$disconnect());
+  .finally(async () => {
+    await prisma.$disconnect();
+    await pool.end();
+  });
