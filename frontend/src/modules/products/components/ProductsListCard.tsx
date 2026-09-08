@@ -47,9 +47,14 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/utils/cn";
 
-import { useDeleteProduct, useProducts } from "../hooks/useProducts";
+import {
+  useDeleteProduct,
+  useMyProducts,
+  useProducts,
+} from "../hooks/useProducts";
 import type { Product, SortBy, SortOrder } from "../types";
 import { useDebounce } from "@/hooks/useDebounce";
+import { useAuthStore } from "@/modules/auth/store/useAuthStore";
 
 const PAGE_SIZE = 7;
 
@@ -98,17 +103,32 @@ export const ProductsListCard = () => {
   const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
-  const {
-    data: response,
-    isLoading,
-    isError,
-  } = useProducts({
-    search: debouncedSearch,
-    sortBy,
-    sortOrder,
-    page,
-    limit,
-  });
+  const [viewMode, setViewMode] = useState<"all" | "my-products">("all");
+  const allProducts = useProducts(
+    {
+      search: debouncedSearch,
+      sortBy,
+      sortOrder,
+      page,
+      limit,
+    },
+    viewMode === "all",
+  );
+  const myProducts = useMyProducts(
+    {
+      search: debouncedSearch,
+      sortBy,
+      sortOrder,
+      page,
+      limit,
+    },
+    viewMode === "my-products",
+  );
+  const response = viewMode === "all" ? allProducts.data : myProducts.data;
+  const isLoading =
+    viewMode === "all" ? allProducts.isLoading : myProducts.isLoading;
+  const isError = viewMode === "all" ? allProducts.isError : myProducts.isError;
+
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   const pageProducts = response?.data ?? [];
@@ -159,7 +179,9 @@ export const ProductsListCard = () => {
     <Card className="rounded-2xl bg-white p-4 sm:p-6 dark:border-gray-800 dark:bg-white/3">
       <CardHeader className="flex flex-col gap-4 p-0 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-lg font-semibold">Products List</h1>
+          <h1 className="text-lg font-semibold">
+            {viewMode === "all" ? "All" : "My"} Products List
+          </h1>
           <p className="text-sm text-muted-foreground">
             Track your store's progress to boost your sales.
           </p>
@@ -212,6 +234,14 @@ export const ProductsListCard = () => {
                 onClick={() => setLimit(20)}
               >
                 20
+              </Button>
+              <Button
+                variant={viewMode === "all" ? "outline" : "default"}
+                onClick={() =>
+                  setViewMode(viewMode === "all" ? "my-products" : "all")
+                }
+              >
+                My Products
               </Button>
             </div>
             <Button variant="outline" className="w-full sm:w-auto">
@@ -271,7 +301,7 @@ export const ProductsListCard = () => {
                 <TableHead className="hidden lg:table-cell">
                   Created At
                 </TableHead>
-                <TableHead className="w-10" />
+                <TableHead className="w-11" />
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -435,6 +465,7 @@ const ProductRow = ({
   selected: boolean;
   onToggle: () => void;
 }) => {
+  const sellerId = useAuthStore((state) => state.user?.id);
   return (
     <TableRow data-state={selected ? "selected" : undefined}>
       <TableCell>
@@ -470,9 +501,11 @@ const ProductRow = ({
       <TableCell className="hidden text-muted-foreground lg:table-cell">
         {formatDate(product.createdAt)}
       </TableCell>
-      <TableCell>
-        <ProductActionsMenu product={product} />
-      </TableCell>
+      {sellerId === product.sellerId && (
+        <TableCell>
+          <ProductActionsMenu product={product} />
+        </TableCell>
+      )}
     </TableRow>
   );
 };

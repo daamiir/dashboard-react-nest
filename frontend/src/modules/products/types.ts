@@ -6,15 +6,17 @@ export interface Product {
   price: number;
   stockQuantity: number;
   createdAt: string; // ISO date string
+
+  sellerId: string;
 }
 
 export type SortBy = "name" | "category" | "brand" | "price";
 export type SortOrder = "asc" | "desc";
 
 export interface ProductQueryParams {
-  search?: string,
-  sortBy?: SortBy,
-  sortOrder?: SortOrder,
+  search?: string;
+  sortBy?: SortBy;
+  sortOrder?: SortOrder;
   page?: number;
   limit?: number;
 }

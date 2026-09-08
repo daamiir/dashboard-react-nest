@@ -25,7 +25,10 @@ async function handleResponse<T>(res: Response): Promise<ApiEnvelope<T>> {
   return res.json();
 }
 
-export type CreateProductPayload = Omit<Product, "id" | "createdAt">;
+export type CreateProductPayload = Omit<
+  Product,
+  "id" | "createdAt" | "sellerId"
+>;
 export type UpdateProductPayload = Partial<CreateProductPayload>;
 
 export const productsApi = {
@@ -40,6 +43,27 @@ export const productsApi = {
     if (query.limit) params.set("limit", String(query.limit));
 
     const res = await fetch(`${BASE_URL}?${params}`);
+    const envelope = await handleResponse<Product[]>(res);
+    return { data: envelope.data, meta: envelope.meta! };
+  },
+
+  getMyProducts: async (
+    query: ProductQueryParams,
+  ): Promise<PaginatedResponse<Product>> => {
+    const ACCESS_TOKEN = useAuthStore.getState().token;
+
+    const params = new URLSearchParams();
+    if (query.search) params.set("search", query.search);
+    if (query.sortBy) params.set("sortBy", query.sortBy);
+    if (query.sortOrder) params.set("sortOrder", query.sortOrder);
+    if (query.page) params.set("page", String(query.page));
+    if (query.limit) params.set("limit", String(query.limit));
+
+    const res = await fetch(`${BASE_URL}/me?${params}`, {
+      headers: {
+        Authorization: `Bearer ${ACCESS_TOKEN}`,
+      },
+    });
     const envelope = await handleResponse<Product[]>(res);
     return { data: envelope.data, meta: envelope.meta! };
   },

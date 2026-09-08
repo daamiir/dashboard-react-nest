@@ -1,4 +1,9 @@
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import {
   productsApi,
   type CreateProductPayload,
@@ -10,11 +15,21 @@ import type { ProductQueryParams } from "../types";
 
 export const PRODUCTS_QUERY_KEY = ["products"] as const;
 
-export function useProducts(query: ProductQueryParams) {
+export function useProducts(query: ProductQueryParams, enabled: boolean) {
   return useQuery({
     queryKey: [...PRODUCTS_QUERY_KEY, query],
     queryFn: () => productsApi.getAll(query),
     placeholderData: keepPreviousData,
+    enabled,
+  });
+}
+
+export function useMyProducts(query: ProductQueryParams, enabled: boolean) {
+  return useQuery({
+    queryKey: [...PRODUCTS_QUERY_KEY, "my-products", query],
+    queryFn: () => productsApi.getMyProducts(query),
+    placeholderData: keepPreviousData,
+    enabled,
   });
 }
 
