@@ -1,3 +1,4 @@
+import AppLayout from "@/components/layout/AppLayout";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { lazy, Suspense } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
@@ -23,18 +24,23 @@ export function AppRoutes() {
 
         {/* Protected routes */}
         <Route element={<ProtectedRoute />}>
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          <Route path="/dashboard" element={<DashboardPage />} />
-          <Route path="/e-commerce/products" element={<ProductsPage />} />
-        </Route>
+          <Route element={<AppLayout />}>
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/e-commerce/products" element={<ProductsPage />} />
 
-        {/* Protected routes for SELLER */}
-        <Route element={<ProtectedRoute allowedRoles={["SELLER"]} />}>
-          <Route path="/e-commerce/add-product" element={<AddProductPage />} />
-          <Route
-            path="/e-commerce/edit-product/:id"
-            element={<EditProductPage />}
-          />
+            {/* Protected routes for SELLER */}
+            <Route element={<ProtectedRoute allowedRoles={["SELLER"]} />}>
+              <Route
+                path="/e-commerce/add-product"
+                element={<AddProductPage />}
+              />
+              <Route
+                path="/e-commerce/edit-product/:id"
+                element={<EditProductPage />}
+              />
+            </Route>
+          </Route>
         </Route>
 
         {/* Fallback 404 */}
