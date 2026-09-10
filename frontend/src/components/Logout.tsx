@@ -1,11 +1,14 @@
 import { useAuthStore } from "@/modules/auth/store/useAuthStore";
 import { LogOutIcon } from "lucide-react";
 import { Button } from "./ui/button";
+import { useQueryClient } from "@tanstack/react-query";
 
 const Logout = () => {
+  const queryClient = useQueryClient();
   const { logout } = useAuthStore();
 
   const handleLogout = () => {
+    queryClient.clear();
     logout();
   };
 
