@@ -175,6 +175,11 @@ export const ProductsListCard = () => {
     });
   };
 
+  const handleViewModeToggle = () => {
+    setViewMode((prev) => (prev === "all" ? "my-products" : "all"));
+    setPage(1);
+  };
+
   return (
     <Card className="rounded-2xl bg-white p-4 sm:p-6 dark:border-gray-800 dark:bg-white/3">
       <CardHeader className="flex flex-col gap-4 p-0 sm:flex-row sm:items-start sm:justify-between">
@@ -237,9 +242,7 @@ export const ProductsListCard = () => {
               </Button>
               <Button
                 variant={viewMode === "all" ? "outline" : "default"}
-                onClick={() =>
-                  setViewMode(viewMode === "all" ? "my-products" : "all")
-                }
+                onClick={handleViewModeToggle}
               >
                 My Products
               </Button>
@@ -501,11 +504,11 @@ const ProductRow = ({
       <TableCell className="hidden text-muted-foreground lg:table-cell">
         {formatDate(product.createdAt)}
       </TableCell>
-      {sellerId === product.sellerId && (
-        <TableCell>
+      <TableCell>
+        {sellerId === product.sellerId && (
           <ProductActionsMenu product={product} />
-        </TableCell>
-      )}
+        )}
+      </TableCell>
     </TableRow>
   );
 };
@@ -519,6 +522,7 @@ const ProductMobileCard = ({
   selected: boolean;
   onToggle: () => void;
 }) => {
+  const sellerId = useAuthStore((state) => state.user?.id);
   return (
     <div
       data-state={selected ? "selected" : undefined}
@@ -557,7 +561,9 @@ const ProductMobileCard = ({
           {formatDate(product.createdAt)}
         </p>
       </div>
-      <ProductActionsMenu product={product} />
+      {sellerId === product.sellerId && (
+        <ProductActionsMenu product={product} />
+      )}
     </div>
   );
 };
