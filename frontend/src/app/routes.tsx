@@ -1,16 +1,17 @@
-import AppLayout from "@/components/layout/AppLayout";
+import AppLayout from "@/components/layout/seller/AppLayout";
+import BuyerLayout from "@/components/layout/buyer/BuyerLayout";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { lazy, Suspense } from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 
 const SignupPage = lazy(() => import("@/pages/auth/SignupPage"));
 const LoginPage = lazy(() => import("@/pages/auth/LoginPage"));
-const DashboardPage = lazy(() => import("@/pages/DashboardPage"));
-const ProductsPage = lazy(() => import("@/pages/e-commerce/ProductsPage"));
-const AddProductPage = lazy(() => import("@/pages/e-commerce/AddProductPage"));
-const EditProductPage = lazy(
-  () => import("@/pages/e-commerce/EditProductPage"),
-);
+const LandingPage = lazy(() => import("@/pages/buyer/LandingPage"));
+const ProductsPage = lazy(() => import("@/pages/buyer/ProductsPage"));
+const DashboardPage = lazy(() => import("@/pages/seller/DashboardPage"));
+const ProductsSellerPage = lazy(() => import("@/pages/seller/ProductsPage"));
+const AddProductPage = lazy(() => import("@/pages/seller/AddProductPage"));
+const EditProductPage = lazy(() => import("@/pages/seller/EditProductPage"));
 const NotFoundPage = lazy(() => import("@/pages/NotFoundPage"));
 
 export function AppRoutes() {
@@ -18,28 +19,36 @@ export function AppRoutes() {
     <Suspense fallback={<div className="p-6">Loading…</div>}>
       <Routes>
         {/* Public routes */}
-        <Route path="/signup" element={<SignupPage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<SignupPage />} />
         <Route path="/unauthorized" element={<div>Access Denied</div>} />
 
-        {/* Protected routes */}
-        <Route element={<ProtectedRoute />}>
-          <Route element={<AppLayout />}>
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
-            <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/e-commerce/products" element={<ProductsPage />} />
+        {/* Buyer: public browsing */}
+        <Route element={<BuyerLayout />}>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/shop" element={<ProductsPage />} />
+          <Route path="/shop/:id" element={<div>Product Details Page</div>} />
+          <Route path="/cart" element={<div>Cart Page</div>} />
 
-            {/* Protected routes for SELLER */}
-            <Route element={<ProtectedRoute allowedRoles={["SELLER"]} />}>
-              <Route
-                path="/e-commerce/add-product"
-                element={<AddProductPage />}
-              />
-              <Route
-                path="/e-commerce/edit-product/:id"
-                element={<EditProductPage />}
-              />
-            </Route>
+          {/*Buyer: protected routes*/}
+          <Route
+            element={<ProtectedRoute allowedRoles={["BUYER", "SELLER"]} />}
+          >
+            <Route path="/checkout" element={<div>Checkout Page</div>} />
+          </Route>
+        </Route>
+
+        {/*Seller: protected routes */}
+        <Route element={<ProtectedRoute allowedRoles={["SELLER"]} />}>
+          <Route element={<AppLayout />}>
+            <Route path="/seller" element={<DashboardPage />} />
+            <Route path="/seller/products" element={<ProductsSellerPage />} />
+
+            <Route path="/seller/products/add" element={<AddProductPage />} />
+            <Route
+              path="/seller/products/edit/:id"
+              element={<EditProductPage />}
+            />
           </Route>
         </Route>
 

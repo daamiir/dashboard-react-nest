@@ -16,7 +16,7 @@ const SignupPage = () => {
   const onSubmit = (values: RegisterFormValues) => {
     register(values, {
       onSuccess: () => {
-        navigate("/dashboard");
+        navigate("/");
       },
     });
   };

@@ -16,7 +16,7 @@ const LoginPage = () => {
   const onSubmit = (values: LoginFormValues) => {
     login(values, {
       onSuccess: () => {
-        navigate("/dashboard");
+        navigate("/");
       },
     });
   };

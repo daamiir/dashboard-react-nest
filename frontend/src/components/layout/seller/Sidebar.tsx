@@ -12,13 +12,13 @@ const data: { navMain: NavItem[] } = {
   navMain: [
     {
       title: "Dashboard",
-      url: "/dashboard",
+      url: "/seller",
       icon: LayoutDashboard,
       isActive: false,
       items: [
         {
           title: "Home",
-          url: "/dashboard",
+          url: "/seller",
         },
       ],
     },
@@ -30,11 +30,11 @@ const data: { navMain: NavItem[] } = {
       items: [
         {
           title: "Products",
-          url: "/e-commerce/products",
+          url: "/seller/products",
         },
         {
           title: "Add Product",
-          url: "/e-commerce/add-product",
+          url: "/seller/products/add",
         },
       ],
     },
