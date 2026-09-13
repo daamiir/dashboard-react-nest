@@ -23,7 +23,6 @@ export class ProductsService {
           ? {
               OR: [
                 { name: { contains: search, mode: 'insensitive' } },
-                { category: { contains: search, mode: 'insensitive' } },
                 { brand: { contains: search, mode: 'insensitive' } },
               ],
             }
@@ -39,7 +38,6 @@ export class ProductsService {
           ? {
               OR: [
                 { name: { contains: search, mode: 'insensitive' } },
-                { category: { contains: search, mode: 'insensitive' } },
                 { brand: { contains: search, mode: 'insensitive' } },
               ],
             }
@@ -71,7 +69,6 @@ export class ProductsService {
             ? {
                 OR: [
                   { name: { contains: search, mode: 'insensitive' } },
-                  { category: { contains: search, mode: 'insensitive' } },
                   { brand: { contains: search, mode: 'insensitive' } },
                 ],
               }
@@ -90,7 +87,6 @@ export class ProductsService {
             ? {
                 OR: [
                   { name: { contains: search, mode: 'insensitive' } },
-                  { category: { contains: search, mode: 'insensitive' } },
                   { brand: { contains: search, mode: 'insensitive' } },
                 ],
               }

@@ -6,22 +6,49 @@ datasource db {
   provider = "postgresql"
 }
 
+enum Category {
+  SMARTPHONE
+  LAPTOP
+  TABLET
+  HEADPHONES
+}
+
 model Product {
   id            String   @id @default(uuid())
   name          String
-  category      String
+  category      Category @default(SMARTPHONE)
   brand         String
   price         Float
   stockQuantity Int      @default(0)
+  images        String[]
+  description   String   @db.Text
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+
+  // --- Fixed: most-common filters ---
+  ram           Int
+  storage       Int
+  screenSize    Float
+  processor     String
+  color         String
+  os            String
+  releaseYear   Int
+  has5G         Boolean  @default(false)
+  hasNfc        Boolean  @default(false)
+
+  // --- Flexible: rare filters ---
+  attributes    Json?
 
   sellerId      String
   seller        User @relation(fields: [sellerId], references: [id])
 
   @@index([category])
   @@index([brand])
-  @@index([createdAt])
+  @@index([ram])
+  @@index([storage])
+  @@index([price])
+  @@index([os])
+  @@index([has5G])
   @@index([sellerId])
 }
 
