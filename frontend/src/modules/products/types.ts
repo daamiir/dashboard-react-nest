@@ -1,10 +1,15 @@
+export type Category = "SMARTPHONE" | "LAPTOP" | "TABLET" | "HEADPHONES";
+
 export interface Product {
   id: string;
   name: string;
-  category: string;
+  category: Category;
   brand: string;
   price: number;
   stockQuantity: number;
+  images: string[];
+  description: string;
+  attributes: Record<string, unknown>;
   createdAt: string; // ISO date string
 
   sellerId: string;

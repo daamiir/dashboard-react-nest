@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import {
   ProductDescriptionCard,
   PricingAvailabilityCard,
+  ProductImagesCard,
 } from "@/modules/products";
 import {
   useProduct,
@@ -15,6 +16,7 @@ import {
   productSchema,
   type ProductFormValues,
 } from "@/modules/products/schema";
+import { buildAttributesSchema } from "@/modules/products/config/build-attributes-schema";
 
 const EditProductPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -26,10 +28,12 @@ const EditProductPage = () => {
     resolver: zodResolver(productSchema),
     defaultValues: {
       name: "",
-      category: "",
+      category: "SMARTPHONE",
       brand: "",
       price: 0,
       stockQuantity: 1,
+      description: "",
+      attributes: {},
     },
   });
 
@@ -41,13 +45,35 @@ const EditProductPage = () => {
       brand: product.brand,
       price: product.price,
       stockQuantity: product.stockQuantity,
+      description: product.description,
+      attributes: product.attributes ?? {},
     });
   }, [product, methods]);
 
   const onSubmit = (data: ProductFormValues) => {
     if (!id) return;
+
+    const attributesResult = buildAttributesSchema(data.category).safeParse(
+      data.attributes,
+    );
+    if (!attributesResult.success) {
+      attributesResult.error.issues.forEach((issue) => {
+        methods.setError(`attributes.${issue.path.join(".")}` as any, {
+          message: issue.message,
+        });
+      });
+      return;
+    }
+
+    const payload = {
+      ...data,
+      // TODO: wire real uploaded URLs once an image upload endpoint exists
+      images: product?.images ?? [],
+      attributes: attributesResult.data,
+    };
+
     updateProduct.mutate(
-      { id, payload: data },
+      { id, payload },
       { onSuccess: () => navigate("/seller/products") },
     );
   };
@@ -67,6 +93,7 @@ const EditProductPage = () => {
           <div className="space-y-6">
             <div className="flex flex-col gap-6">
               <ProductDescriptionCard />
+              <ProductImagesCard />
               <PricingAvailabilityCard />
             </div>
 

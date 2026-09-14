@@ -5,12 +5,14 @@ import { Button } from "@/components/ui/button";
 import {
   ProductDescriptionCard,
   PricingAvailabilityCard,
+  ProductImagesCard,
 } from "@/modules/products";
 import { useCreateProduct } from "@/modules/products/hooks/useProducts";
 import {
   productSchema,
   type ProductFormValues,
 } from "@/modules/products/schema";
+import { buildAttributesSchema } from "@/modules/products/config/build-attributes-schema";
 
 const AddProductPage = () => {
   const navigate = useNavigate();
@@ -20,15 +22,39 @@ const AddProductPage = () => {
     resolver: zodResolver(productSchema),
     defaultValues: {
       name: "",
-      category: "",
+      category: "SMARTPHONE",
       brand: "",
       price: 0,
       stockQuantity: 1,
+      description: "",
+      attributes: {},
     },
   });
 
   const onSubmit = (data: ProductFormValues) => {
-    createProduct.mutate(data, {
+    // attributes are validated separately against the schema built for
+    // the currently selected category (required fields/types differ
+    // per category, so productSchema keeps `attributes` loose).
+    const attributesResult = buildAttributesSchema(data.category).safeParse(
+      data.attributes,
+    );
+    if (!attributesResult.success) {
+      attributesResult.error.issues.forEach((issue) => {
+        methods.setError(`attributes.${issue.path.join(".")}` as any, {
+          message: issue.message,
+        });
+      });
+      return;
+    }
+
+    const payload = {
+      ...data,
+      // TODO: wire real uploaded URLs once an image upload endpoint exists
+      images: [] as string[],
+      attributes: attributesResult.data,
+    };
+
+    createProduct.mutate(payload, {
       onSuccess: () => navigate("/seller/products"),
     });
   };
@@ -41,6 +67,7 @@ const AddProductPage = () => {
           <div className="space-y-6">
             <div className="flex flex-col gap-6">
               <ProductDescriptionCard />
+              <ProductImagesCard />
               <PricingAvailabilityCard />
             </div>
 

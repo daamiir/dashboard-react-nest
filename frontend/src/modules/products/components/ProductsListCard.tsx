@@ -198,7 +198,7 @@ export const ProductsListCard = () => {
           </Button>
           <Button
             className="flex-1 bg-primary hover:bg-primary/90 sm:flex-none"
-            onClick={() => navigate("/e-commerce/add-product")}
+            onClick={() => navigate("/seller/products/add")}
           >
             <Plus />
             Add Product
@@ -422,7 +422,7 @@ const ProductActionsMenu = ({ product }: { product: Product }) => {
         </DropdownMenuTrigger>
         <DropdownMenuContent>
           <DropdownMenuItem
-            onClick={() => navigate(`/e-commerce/edit-product/${product.id}`)}
+            onClick={() => navigate(`/seller/products/edit/${product.id}`)}
           >
             <Pencil />
             Edit
