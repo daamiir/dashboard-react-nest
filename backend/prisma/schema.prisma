@@ -1,9 +1,11 @@
 generator client {
   provider = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
 }
 
 datasource db {
   provider = "postgresql"
+  extensions = [btree_gin]
 }
 
 enum Category {
@@ -16,39 +18,25 @@ enum Category {
 model Product {
   id            String   @id @default(uuid())
   name          String
-  category      Category @default(SMARTPHONE)
   brand         String
+  category      Category @default(SMARTPHONE)
   price         Float
   stockQuantity Int      @default(0)
   images        String[]
   description   String   @db.Text
+
+  attributes    Json
+
+  sellerId      String
+  seller        User @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  // --- Fixed: most-common filters ---
-  ram           Int
-  storage       Int
-  screenSize    Float
-  processor     String
-  color         String
-  os            String
-  releaseYear   Int
-  has5G         Boolean  @default(false)
-  hasNfc        Boolean  @default(false)
-
-  // --- Flexible: rare filters ---
-  attributes    Json?
-
-  sellerId      String
-  seller        User @relation(fields: [sellerId], references: [id])
-
+  @@index([attributes(ops: JsonbPathOps)], type: Gin)
   @@index([category])
   @@index([brand])
-  @@index([ram])
-  @@index([storage])
   @@index([price])
-  @@index([os])
-  @@index([has5G])
   @@index([sellerId])
 }
 
@@ -59,12 +47,12 @@ enum Role {
 
 model User {
   id           String   @id @default(uuid())
-  email        String   @unique
-  passwordHash String
   name         String
+  passwordHash String
+  email        String   @unique
   role         Role     @default(BUYER)
+  products  Product[]
+
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
-
-  products  Product[]
 }

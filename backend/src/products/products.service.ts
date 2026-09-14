@@ -14,35 +14,25 @@ export class ProductsService {
 
   async findAll(query: FindProductsQueryDto) {
     const { search, sortBy, sortOrder, page, limit } = query;
-
     const skip = (page! - 1) * limit!;
+
+    const where = search
+      ? {
+          OR: [
+            { name: { contains: search, mode: 'insensitive' as const } },
+            { brand: { contains: search, mode: 'insensitive' as const } },
+          ],
+        }
+      : {};
 
     const [data, total] = await Promise.all([
       this.prisma.product.findMany({
-        where: search
-          ? {
-              OR: [
-                { name: { contains: search, mode: 'insensitive' } },
-                { brand: { contains: search, mode: 'insensitive' } },
-              ],
-            }
-          : {},
-        orderBy: {
-          [sortBy!]: sortOrder,
-        },
+        where,
+        orderBy: { [sortBy!]: sortOrder },
         skip,
         take: limit,
       }),
-      this.prisma.product.count({
-        where: search
-          ? {
-              OR: [
-                { name: { contains: search, mode: 'insensitive' } },
-                { brand: { contains: search, mode: 'insensitive' } },
-              ],
-            }
-          : {},
-      }),
+      this.prisma.product.count({ where }),
     ]);
 
     return {
@@ -58,41 +48,28 @@ export class ProductsService {
 
   async findMyProducts(query: FindProductsQueryDto, sellerId: string) {
     const { search, sortBy, sortOrder, page, limit } = query;
-
     const skip = (page! - 1) * limit!;
+
+    const where = {
+      sellerId,
+      ...(search
+        ? {
+            OR: [
+              { name: { contains: search, mode: 'insensitive' as const } },
+              { brand: { contains: search, mode: 'insensitive' as const } },
+            ],
+          }
+        : {}),
+    };
 
     const [data, total] = await Promise.all([
       this.prisma.product.findMany({
-        where: {
-          sellerId,
-          ...(search
-            ? {
-                OR: [
-                  { name: { contains: search, mode: 'insensitive' } },
-                  { brand: { contains: search, mode: 'insensitive' } },
-                ],
-              }
-            : {}),
-        },
-        orderBy: {
-          [sortBy!]: sortOrder,
-        },
+        where,
+        orderBy: { [sortBy!]: sortOrder },
         skip,
         take: limit,
       }),
-      this.prisma.product.count({
-        where: {
-          sellerId,
-          ...(search
-            ? {
-                OR: [
-                  { name: { contains: search, mode: 'insensitive' } },
-                  { brand: { contains: search, mode: 'insensitive' } },
-                ],
-              }
-            : {}),
-        },
-      }),
+      this.prisma.product.count({ where }),
     ]);
 
     return {

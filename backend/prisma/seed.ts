@@ -1,4 +1,4 @@
-import { PrismaClient, Role } from '@prisma/client';
+import { Prisma, PrismaClient, Role } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
 import * as bcrypt from 'bcrypt';
@@ -33,16 +33,7 @@ async function main() {
     stockQuantity: p.stockQuantity,
     images: p.images,
     description: p.description,
-    ram: p.ram,
-    storage: p.storage,
-    screenSize: p.screenSize,
-    processor: p.processor,
-    color: p.color,
-    os: p.os,
-    releaseYear: p.releaseYear,
-    has5G: p.has5G,
-    hasNfc: p.hasNfc,
-    attributes: p.attributes ?? {},
+    attributes: p.attributes,
     sellerId: seller.id,
   }));
 
