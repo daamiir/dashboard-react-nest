@@ -8,6 +8,9 @@ const SignupPage = lazy(() => import("@/pages/auth/SignupPage"));
 const LoginPage = lazy(() => import("@/pages/auth/LoginPage"));
 const LandingPage = lazy(() => import("@/pages/buyer/LandingPage"));
 const ProductsPage = lazy(() => import("@/pages/buyer/ProductsPage"));
+const ProductDetailsPage = lazy(
+  () => import("@/pages/buyer/ProductDetailsPage"),
+);
 const DashboardPage = lazy(() => import("@/pages/seller/DashboardPage"));
 const ProductsSellerPage = lazy(() => import("@/pages/seller/ProductsPage"));
 const AddProductPage = lazy(() => import("@/pages/seller/AddProductPage"));
@@ -27,7 +30,7 @@ export function AppRoutes() {
         <Route element={<BuyerLayout />}>
           <Route path="/" element={<LandingPage />} />
           <Route path="/shop" element={<ProductsPage />} />
-          <Route path="/shop/:id" element={<div>Product Details Page</div>} />
+          <Route path="/shop/:id" element={<ProductDetailsPage />} />
           <Route path="/cart" element={<div>Cart Page</div>} />
 
           {/*Buyer: protected routes*/}

@@ -31,16 +31,28 @@ export type CreateProductPayload = Omit<
 >;
 export type UpdateProductPayload = Partial<CreateProductPayload>;
 
+function buildQueryParams(query: ProductQueryParams): URLSearchParams {
+  const params = new URLSearchParams();
+  if (query.search) params.set("search", query.search);
+  if (query.category) params.set("category", query.category);
+  if (query.minPrice !== undefined)
+    params.set("minPrice", String(query.minPrice));
+  if (query.maxPrice !== undefined)
+    params.set("maxPrice", String(query.maxPrice));
+  if (query.ram !== undefined) params.set("ram", String(query.ram));
+  if (query.storage !== undefined) params.set("storage", String(query.storage));
+  if (query.sortBy) params.set("sortBy", query.sortBy);
+  if (query.sortOrder) params.set("sortOrder", query.sortOrder);
+  if (query.page) params.set("page", String(query.page));
+  if (query.limit) params.set("limit", String(query.limit));
+  return params;
+}
+
 export const productsApi = {
   getAll: async (
     query: ProductQueryParams,
   ): Promise<PaginatedResponse<Product>> => {
-    const params = new URLSearchParams();
-    if (query.search) params.set("search", query.search);
-    if (query.sortBy) params.set("sortBy", query.sortBy);
-    if (query.sortOrder) params.set("sortOrder", query.sortOrder);
-    if (query.page) params.set("page", String(query.page));
-    if (query.limit) params.set("limit", String(query.limit));
+    const params = buildQueryParams(query);
 
     const res = await fetch(`${BASE_URL}?${params}`);
     const envelope = await handleResponse<Product[]>(res);
@@ -51,13 +63,7 @@ export const productsApi = {
     query: ProductQueryParams,
   ): Promise<PaginatedResponse<Product>> => {
     const ACCESS_TOKEN = useAuthStore.getState().token;
-
-    const params = new URLSearchParams();
-    if (query.search) params.set("search", query.search);
-    if (query.sortBy) params.set("sortBy", query.sortBy);
-    if (query.sortOrder) params.set("sortOrder", query.sortOrder);
-    if (query.page) params.set("page", String(query.page));
-    if (query.limit) params.set("limit", String(query.limit));
+    const params = buildQueryParams(query);
 
     const res = await fetch(`${BASE_URL}/me?${params}`, {
       headers: {

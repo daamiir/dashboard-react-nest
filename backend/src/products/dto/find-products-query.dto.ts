@@ -1,5 +1,15 @@
-import { Type } from "class-transformer";
-import { IsOptional, IsString, IsNumber, IsIn, IsInt, Min, Max } from "class-validator";
+import { Type } from 'class-transformer';
+import {
+  IsOptional,
+  IsString,
+  IsIn,
+  IsInt,
+  IsNumber,
+  IsEnum,
+  Min,
+  Max,
+} from 'class-validator';
+import { Category } from '@prisma/client';
 
 export class FindProductsQueryDto {
   @IsOptional()
@@ -7,18 +17,46 @@ export class FindProductsQueryDto {
   search?: string;
 
   @IsOptional()
-  @IsString()
-  @IsIn(["name", "category", "brand", "price"], { 
-    message: "sortBy must be one of 'name', 'category', 'brand', or 'price'" 
-  })
-  sortBy?: "name" | "category" | "brand" | "price" = "name";
+  @IsEnum(Category)
+  category?: Category;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  minPrice?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  maxPrice?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  ram?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  storage?: number;
 
   @IsOptional()
   @IsString()
-  @IsIn(["asc", "desc"], { 
-    message: "sortOrder must be 'asc' or 'desc'" 
+  @IsIn(['name', 'category', 'brand', 'price'], {
+    message: "sortBy must be one of 'name', 'category', 'brand', or 'price'",
   })
-  sortOrder?: "asc" | "desc" = "asc";
+  sortBy?: 'name' | 'category' | 'brand' | 'price' = 'name';
+
+  @IsOptional()
+  @IsString()
+  @IsIn(['asc', 'desc'], {
+    message: "sortOrder must be 'asc' or 'desc'",
+  })
+  sortOrder?: 'asc' | 'desc' = 'asc';
 
   @IsOptional()
   @Type(() => Number)

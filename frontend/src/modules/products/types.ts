@@ -20,6 +20,11 @@ export type SortOrder = "asc" | "desc";
 
 export interface ProductQueryParams {
   search?: string;
+  category?: Category;
+  minPrice?: number;
+  maxPrice?: number;
+  ram?: number;
+  storage?: number;
   sortBy?: SortBy;
   sortOrder?: SortOrder;
   page?: number;
