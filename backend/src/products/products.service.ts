@@ -1,21 +1,27 @@
 import {
-  ForbiddenException,
   Injectable,
   NotFoundException,
+  BadRequestException,
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { CategoriesService } from '../categories/categories.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { FindProductsQueryDto } from './dto/find-products-query.dto';
+import { ProductVariantValidator } from './validators/product-variant.validator';
 
 @Injectable()
 export class ProductsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private categoriesService: CategoriesService,
+  ) {}
 
-  private buildWhere(query: FindProductsQueryDto): Prisma.ProductWhereInput {
-    const { search, category, minPrice, maxPrice, ram, storage } = query;
-
+  private async buildWhere(
+    query: FindProductsQueryDto,
+  ): Promise<Prisma.ProductWhereInput> {
+    const { search, categoryId, minPrice, maxPrice, ram, storage } = query;
     const where: Prisma.ProductWhereInput = {};
 
     if (search) {
@@ -25,70 +31,74 @@ export class ProductsService {
       ];
     }
 
-    if (category) {
-      where.category = category;
+    if (categoryId) {
+      // Includes the category itself plus all descendant categories
+      const categoryIds =
+        await this.categoriesService.getCategoryAndDescendantIds(categoryId);
+      where.categoryId = { in: categoryIds };
     }
+
+    // Variant-level filters: product matches if AT LEAST ONE variant fits
+    const variantConditions: Prisma.ProductVariantWhereInput[] = [];
 
     if (minPrice !== undefined || maxPrice !== undefined) {
-      where.price = {
-        ...(minPrice !== undefined ? { gte: minPrice } : {}),
-        ...(maxPrice !== undefined ? { lte: maxPrice } : {}),
-      };
+      variantConditions.push({
+        price: {
+          ...(minPrice !== undefined ? { gte: minPrice } : {}),
+          ...(maxPrice !== undefined ? { lte: maxPrice } : {}),
+        },
+      });
     }
 
-    const specFilters: Record<string, unknown> = {};
-    if (ram !== undefined) specFilters.ram = ram;
-    if (storage !== undefined) specFilters.storage = storage;
+    if (ram !== undefined) {
+      variantConditions.push({ attributes: { path: ['ram'], equals: ram } });
+    }
 
-    if (Object.keys(specFilters).length > 0) {
-      where.AND = Object.entries(specFilters).map(([key, value]) => ({
-        attributes: { path: [key], equals: value },
-      })) as Prisma.ProductWhereInput['AND'];
+    if (storage !== undefined) {
+      variantConditions.push({
+        attributes: { path: ['storage'], equals: storage },
+      });
+    }
+
+    if (variantConditions.length > 0) {
+      where.variants = { some: { AND: variantConditions } };
     }
 
     return where;
   }
 
-  async findAll(query: FindProductsQueryDto) {
-    const { sortBy, sortOrder, page, limit } = query;
-    const skip = (page! - 1) * limit!;
-    const where = this.buildWhere(query);
+  private buildOrderBy(
+    query: FindProductsQueryDto,
+  ): Prisma.ProductOrderByWithRelationInput {
+    const { sortBy, sortOrder } = query;
 
-    const [data, total] = await Promise.all([
-      this.prisma.product.findMany({
-        where,
-        orderBy: { [sortBy!]: sortOrder },
-        skip,
-        take: limit,
-      }),
-      this.prisma.product.count({ where }),
-    ]);
+    // Product has no single price -> sort by min/max price across its variants
+    if (sortBy === 'price') {
+      return {
+        variants: {
+          _min: sortOrder === 'asc' ? { price: 'asc' } : undefined,
+          _max: sortOrder === 'desc' ? { price: 'desc' } : undefined,
+        },
+      } as Prisma.ProductOrderByWithRelationInput;
+    }
 
-    return {
-      data,
-      meta: {
-        total,
-        page: page!,
-        limit: limit!,
-        totalPages: Math.ceil(total / limit!),
-      },
-    };
+    return { [sortBy!]: sortOrder };
   }
 
-  async findMyProducts(query: FindProductsQueryDto, sellerId: string) {
-    const { sortBy, sortOrder, page, limit } = query;
+  async findAll(query: FindProductsQueryDto) {
+    const { page, limit } = query;
     const skip = (page! - 1) * limit!;
-    const where: Prisma.ProductWhereInput = {
-      ...this.buildWhere(query),
-      sellerId,
-    };
+    const where = await this.buildWhere(query);
+    const orderBy = this.buildOrderBy(query);
 
+    // Pagination counts Products, not Variants
     const [data, total] = await Promise.all([
       this.prisma.product.findMany({
         where,
-        orderBy: { [sortBy!]: sortOrder },
+        orderBy,
         skip,
         take: limit,
+        include: { variants: true },
       }),
       this.prisma.product.count({ where }),
     ]);
@@ -105,37 +115,102 @@ export class ProductsService {
   }
 
   async findOne(id: string) {
-    const product = await this.prisma.product.findUnique({ where: { id } });
+    const product = await this.prisma.product.findUnique({
+      where: { id },
+      include: { variants: true },
+    });
     if (!product) throw new NotFoundException('Product not found');
     return product;
   }
 
-  create(sellerId: string, createProductDto: CreateProductDto) {
+  create(createProductDto: CreateProductDto, adminId: string) {
+    const { variants, ...productData } = createProductDto;
+
+    // Fail-fast: run before touching the database
+    ProductVariantValidator.validateAll(productData.attributes, variants);
+
+    // Nested write: Prisma wraps this in a single atomic SQL transaction,
+    // so a product is never persisted without at least one variant
     return this.prisma.product.create({
-      data: { ...createProductDto, sellerId },
+      data: {
+        ...productData,
+        createdById: adminId,
+        variants: { create: variants },
+      },
+      include: { variants: true },
     });
   }
 
-  async update(
-    id: string,
-    sellerId: string,
-    updateProductDto: UpdateProductDto,
-  ) {
-    const product = await this.prisma.product.findUnique({ where: { id } });
-    if (!product) throw new NotFoundException('Product not found');
-    if (product.sellerId !== sellerId)
-      throw new ForbiddenException('You are not the owner of this product');
-    return this.prisma.product.update({
+  async update(id: string, updateProductDto: UpdateProductDto) {
+    const existing = await this.prisma.product.findUnique({
       where: { id },
-      data: updateProductDto,
+      include: { variants: true },
+    });
+    if (!existing) throw new NotFoundException('Product not found');
+
+    const { variants, ...productData } = updateProductDto;
+
+    if (variants) {
+      const productAttributes =
+        productData.attributes ??
+        (existing.attributes as Prisma.InputJsonValue);
+      ProductVariantValidator.validateAll(productAttributes, variants);
+
+      // Guard against deleting every variant via the sync
+      const incomingIds = variants
+        .map((v) => v.id)
+        .filter((vId): vId is string => vId !== undefined);
+      const toDelete = existing.variants.filter(
+        (v) => !incomingIds.includes(v.id),
+      );
+      if (
+        toDelete.length === existing.variants.length &&
+        variants.length === 0
+      ) {
+        throw new BadRequestException(
+          'Product must retain at least one variant',
+        );
+      }
+    }
+
+    return this.prisma.$transaction(async (tx) => {
+      if (variants) {
+        const incomingIds = variants
+          .map((v) => v.id)
+          .filter((vId): vId is string => vId !== undefined);
+
+        // Delete variants that were dropped from the incoming array
+        await tx.productVariant.deleteMany({
+          where: { productId: id, id: { notIn: incomingIds } },
+        });
+
+        // Smart sync: has id -> update (preserves id/history), no id -> create
+        for (const variant of variants) {
+          const { id: variantId, ...variantData } = variant;
+          if (variantId) {
+            await tx.productVariant.update({
+              where: { id: variantId },
+              data: variantData,
+            });
+          } else {
+            await tx.productVariant.create({
+              data: { ...variantData, productId: id },
+            });
+          }
+        }
+      }
+
+      return tx.product.update({
+        where: { id },
+        data: productData satisfies Prisma.ProductUpdateInput,
+        include: { variants: true },
+      });
     });
   }
 
-  async remove(id: string, sellerId: string) {
+  async remove(id: string) {
     const product = await this.prisma.product.findUnique({ where: { id } });
     if (!product) throw new NotFoundException('Product not found');
-    if (product.sellerId !== sellerId)
-      throw new ForbiddenException('You are not the owner of this product');
     return this.prisma.product.delete({ where: { id } });
   }
 }

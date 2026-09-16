@@ -1,44 +1,42 @@
-import { Category } from '@prisma/client';
+import { Prisma } from '@prisma/client';
+import { Type } from 'class-transformer';
 import {
   IsString,
   IsNotEmpty,
-  IsNumber,
-  Min,
-  IsInt,
-  IsArray,
-  IsEnum,
   IsObject,
+  IsUUID,
+  IsArray,
+  ValidateNested,
+  ArrayMinSize,
 } from 'class-validator';
+import { CreateVariantDto } from './create-variant.dto';
 
 export class CreateProductDto {
   @IsString()
   @IsNotEmpty()
   name!: string;
 
-  @IsEnum(Category)
+  @IsString()
   @IsNotEmpty()
-  category!: Category;
+  slug!: string;
 
   @IsString()
   @IsNotEmpty()
   brand!: string;
 
-  @IsNumber()
-  @Min(0)
-  price!: number;
-
-  @IsInt()
-  @Min(0)
-  stockQuantity!: number;
-
-  @IsArray()
-  @IsString({ each: true })
-  images!: string[];
-
   @IsString()
   @IsNotEmpty()
   description!: string;
 
+  @IsUUID()
+  categoryId!: string;
+
   @IsObject()
-  attributes!: Record<string, any>;
+  attributes!: Prisma.InputJsonValue;
+
+  @IsArray()
+  @ArrayMinSize(1, { message: 'Product must have at least one variant' })
+  @ValidateNested({ each: true })
+  @Type(() => CreateVariantDto)
+  variants!: CreateVariantDto[];
 }

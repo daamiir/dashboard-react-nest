@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import * as Joi from 'joi';
 import { PrismaModule } from './prisma/prisma.module';
 import { ProductsModule } from './products/products.module';
+import { CategoriesModule } from './categories/categories.module';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { UsersModule } from './users/users.module';
@@ -23,6 +24,7 @@ import { AuthModule } from './auth/auth.module';
       },
     }),
     PrismaModule,
+    CategoriesModule,
     ProductsModule,
     UsersModule,
     AuthModule,

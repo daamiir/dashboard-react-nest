@@ -29,16 +29,6 @@ export class ProductsController {
     return this.productsService.findAll(query);
   }
 
-  @Get('me')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.SELLER)
-  findMyProducts(
-    @Query() query: FindProductsQueryDto,
-    @CurrentUser() user: { id: string },
-  ) {
-    return this.productsService.findMyProducts(query, user.id);
-  }
-
   @Get(':id')
   findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.productsService.findOne(id);
@@ -46,29 +36,25 @@ export class ProductsController {
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.SELLER)
+  @Roles(Role.ADMIN)
   create(@Body() dto: CreateProductDto, @CurrentUser() user: { id: string }) {
-    return this.productsService.create(user.id, dto);
+    return this.productsService.create(dto, user.id);
   }
 
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.SELLER)
+  @Roles(Role.ADMIN)
   update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateProductDto,
-    @CurrentUser() user: { id: string },
   ) {
-    return this.productsService.update(id, user.id, dto);
+    return this.productsService.update(id, dto);
   }
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.SELLER)
-  remove(
-    @Param('id', ParseUUIDPipe) id: string,
-    @CurrentUser() user: { id: string },
-  ) {
-    return this.productsService.remove(id, user.id);
+  @Roles(Role.ADMIN)
+  remove(@Param('id', ParseUUIDPipe) id: string) {
+    return this.productsService.remove(id);
   }
 }

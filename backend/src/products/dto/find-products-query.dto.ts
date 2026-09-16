@@ -5,11 +5,10 @@ import {
   IsIn,
   IsInt,
   IsNumber,
-  IsEnum,
+  IsUUID,
   Min,
   Max,
 } from 'class-validator';
-import { Category } from '@prisma/client';
 
 export class FindProductsQueryDto {
   @IsOptional()
@@ -17,8 +16,8 @@ export class FindProductsQueryDto {
   search?: string;
 
   @IsOptional()
-  @IsEnum(Category)
-  category?: Category;
+  @IsUUID()
+  categoryId?: string;
 
   @IsOptional()
   @Type(() => Number)
@@ -46,10 +45,10 @@ export class FindProductsQueryDto {
 
   @IsOptional()
   @IsString()
-  @IsIn(['name', 'category', 'brand', 'price'], {
-    message: "sortBy must be one of 'name', 'category', 'brand', or 'price'",
+  @IsIn(['name', 'brand', 'price'], {
+    message: "sortBy must be one of 'name', 'brand', or 'price'",
   })
-  sortBy?: 'name' | 'category' | 'brand' | 'price' = 'name';
+  sortBy?: 'name' | 'brand' | 'price' = 'name';
 
   @IsOptional()
   @IsString()
