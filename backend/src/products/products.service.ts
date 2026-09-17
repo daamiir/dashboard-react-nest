@@ -10,6 +10,8 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { FindProductsQueryDto } from './dto/find-products-query.dto';
 import { ProductVariantValidator } from './validators/product-variant.validator';
+import { CreateVariantDto } from './dto/create-variant.dto';
+import { UpdateVariantDto } from './dto/update-variant.dto';
 
 @Injectable()
 export class ProductsService {
@@ -92,6 +94,35 @@ export class ProductsService {
     const orderBy = this.buildOrderBy(query);
 
     // Pagination counts Products, not Variants
+    const [data, total] = await Promise.all([
+      this.prisma.product.findMany({
+        where,
+        orderBy,
+        skip,
+        take: limit,
+        include: { variants: true },
+      }),
+      this.prisma.product.count({ where }),
+    ]);
+
+    return {
+      data,
+      meta: {
+        total,
+        page: page!,
+        limit: limit!,
+        totalPages: Math.ceil(total / limit!),
+      },
+    };
+  }
+
+  async findMyProducts(userId: string, query: FindProductsQueryDto) {
+    const { page, limit } = query;
+    const skip = (page! - 1) * limit!;
+    const where = await this.buildWhere(query);
+    where.createdById = userId;
+    const orderBy = this.buildOrderBy(query);
+
     const [data, total] = await Promise.all([
       this.prisma.product.findMany({
         where,
@@ -212,5 +243,54 @@ export class ProductsService {
     const product = await this.prisma.product.findUnique({ where: { id } });
     if (!product) throw new NotFoundException('Product not found');
     return this.prisma.product.delete({ where: { id } });
+  }
+
+  async addVariant(productId: string, dto: CreateVariantDto) {
+    const product = await this.findOne(productId);
+    const productAttributes = product.attributes as Prisma.InputJsonValue;
+    ProductVariantValidator.validateAll(productAttributes, [dto]);
+    return this.prisma.productVariant.create({
+      data: { ...dto, productId },
+    });
+  }
+
+  async updateVariant(
+    productId: string,
+    variantId: string,
+    dto: UpdateVariantDto,
+  ) {
+    const variant = await this.prisma.productVariant.findUnique({
+      where: { id: variantId },
+    });
+    if (!variant || variant.productId !== productId) {
+      throw new NotFoundException('Variant not found on this product');
+    }
+
+    const product = await this.findOne(productId);
+    const productAttributes = product.attributes as Prisma.InputJsonValue;
+    ProductVariantValidator.validateAll(productAttributes, [dto]);
+
+    return this.prisma.productVariant.update({
+      where: { id: variantId },
+      data: dto,
+    });
+  }
+
+  async removeVariant(productId: string, variantId: string) {
+    const variant = await this.prisma.productVariant.findUnique({
+      where: { id: variantId },
+    });
+    if (!variant || variant.productId !== productId) {
+      throw new NotFoundException('Variant not found on this product');
+    }
+
+    const variantCount = await this.prisma.productVariant.count({
+      where: { productId },
+    });
+    if (variantCount <= 1) {
+      throw new BadRequestException('Product must retain at least one variant');
+    }
+
+    return this.prisma.productVariant.delete({ where: { id: variantId } });
   }
 }

@@ -19,6 +19,8 @@ import { CurrentUser } from '../auth/current-user.decorator';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 import { Role } from '@prisma/client';
+import { CreateVariantDto } from './dto/create-variant.dto';
+import { UpdateVariantDto } from './dto/update-variant.dto';
 
 @Controller('products')
 export class ProductsController {
@@ -27,6 +29,16 @@ export class ProductsController {
   @Get()
   findAll(@Query() query: FindProductsQueryDto) {
     return this.productsService.findAll(query);
+  }
+
+  @Get('me')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  findMyProducts(
+    @Query() query: FindProductsQueryDto,
+    @CurrentUser() user: { id: string },
+  ) {
+    return this.productsService.findMyProducts(user.id, query);
   }
 
   @Get(':id')
@@ -56,5 +68,36 @@ export class ProductsController {
   @Roles(Role.ADMIN)
   remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.productsService.remove(id);
+  }
+
+  @Post(':id/variants')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  addVariant(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: CreateVariantDto,
+  ) {
+    return this.productsService.addVariant(id, dto);
+  }
+
+  @Patch(':id/variants/:variantId')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  updateVariant(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('variantId', ParseUUIDPipe) variantId: string,
+    @Body() dto: UpdateVariantDto,
+  ) {
+    return this.productsService.updateVariant(id, variantId, dto);
+  }
+
+  @Delete(':id/variants/:variantId')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  removeVariant(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('variantId', ParseUUIDPipe) variantId: string,
+  ) {
+    return this.productsService.removeVariant(id, variantId);
   }
 }

@@ -1,5 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { CreateCategoryDto } from './dto/create-category.dto';
+import { UpdateCategoryDto } from './dto/update-category.dto';
 
 @Injectable()
 export class CategoriesService {
@@ -35,5 +41,53 @@ export class CategoriesService {
     const category = await this.prisma.category.findUnique({ where: { id } });
     if (!category) throw new NotFoundException('Category not found');
     return category;
+  }
+
+  async create(dto: CreateCategoryDto) {
+    if (dto.parentId) await this.findOne(dto.parentId);
+    return this.prisma.category.create({ data: dto });
+  }
+
+  async update(id: string, dto: UpdateCategoryDto) {
+    await this.findOne(id);
+
+    if (dto.parentId) {
+      if (dto.parentId === id) {
+        throw new BadRequestException('A category cannot be its own parent');
+      }
+      // Block making a descendant the new parent (would create a cycle)
+      const descendantIds = await this.getCategoryAndDescendantIds(id);
+      if (descendantIds.includes(dto.parentId)) {
+        throw new BadRequestException(
+          'Cannot set a descendant category as parent',
+        );
+      }
+    }
+
+    return this.prisma.category.update({ where: { id }, data: dto });
+  }
+
+  async remove(id: string) {
+    await this.findOne(id);
+
+    const childCount = await this.prisma.category.count({
+      where: { parentId: id },
+    });
+    if (childCount > 0) {
+      throw new BadRequestException(
+        'Cannot delete a category that has subcategories',
+      );
+    }
+
+    const productCount = await this.prisma.product.count({
+      where: { categoryId: id },
+    });
+    if (productCount > 0) {
+      throw new BadRequestException(
+        'Cannot delete a category that has products',
+      );
+    }
+
+    return this.prisma.category.delete({ where: { id } });
   }
 }
