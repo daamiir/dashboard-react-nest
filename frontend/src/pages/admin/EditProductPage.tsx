@@ -44,7 +44,7 @@ const EditProductPage = () => {
     if (!product) return;
     methods.reset({
       name: product.name,
-      categoryId: product.categoryId,
+      categoryId: product.categoryId ?? product.categoryId ?? "",
       brand: product.brand,
       description: product.description,
       attributes: product.attributes ?? {},
@@ -57,6 +57,7 @@ const EditProductPage = () => {
         attributes: v.attributes ?? {},
       })),
     });
+    console.log("categoryId after reset:", methods.getValues("categoryId"));
   }, [product, methods]);
 
   const onSubmit = (data: ProductFormValues) => {

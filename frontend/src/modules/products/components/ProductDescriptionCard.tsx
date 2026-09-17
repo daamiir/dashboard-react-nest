@@ -123,11 +123,13 @@ export const ProductDescriptionCard = () => {
             label="Product Name"
             placeholder="e.g. Apple iPhone 17 Pro"
           />
-          <FormSelect
-            name="categoryId"
-            label="Category"
-            options={categoryOptions}
-          />
+          {categories.length > 0 && (
+            <FormSelect
+              name="categoryId"
+              label="Category"
+              options={categoryOptions}
+            />
+          )}
         </div>
 
         <FormInput

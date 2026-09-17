@@ -53,7 +53,7 @@ export function FormSelect({
             <SelectTrigger id={name} className="w-full">
               <SelectValue placeholder={placeholder} />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent position="popper">
               {normalizedOptions.map((option) => (
                 <SelectItem key={option.value} value={option.value}>
                   {option.label}

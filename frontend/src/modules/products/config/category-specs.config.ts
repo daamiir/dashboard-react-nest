@@ -13,14 +13,6 @@ export interface SpecField {
 export const CATEGORY_SPECS: Record<string, SpecField[]> = {
   // 1. SMARTPHONES
   smartphone: [
-    { key: "ram", label: "RAM", type: "number", unit: "GB", required: true },
-    {
-      key: "storage",
-      label: "Storage",
-      type: "number",
-      unit: "GB",
-      required: true,
-    },
     {
       key: "screenSize",
       label: "Screen Size",
@@ -58,7 +50,6 @@ export const CATEGORY_SPECS: Record<string, SpecField[]> = {
       type: "select",
       options: ["Nano-SIM", "Dual SIM", "eSIM + Nano-SIM"],
     },
-    { key: "color", label: "Color", type: "text", required: true },
     { key: "weight", label: "Weight", type: "number", unit: "g" },
     { key: "has5G", label: "5G Support", type: "boolean" },
     { key: "hasNfc", label: "NFC Support", type: "boolean" },
