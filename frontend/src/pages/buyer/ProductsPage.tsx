@@ -189,7 +189,7 @@ const ProductsPage = () => {
                 return (
                   <button
                     key={product.id}
-                    onClick={() => navigate(`/shop/${product.id}`)}
+                    onClick={() => navigate(`/shop/${product.slug}`)}
                     className="rounded-lg border overflow-hidden flex flex-col text-left hover:shadow-md transition-shadow"
                   >
                     <div className="aspect-square bg-muted overflow-hidden">

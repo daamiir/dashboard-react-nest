@@ -87,6 +87,12 @@ export const productsApi = {
     return envelope.data;
   },
 
+  getBySlug: async (slug: string): Promise<Product> => {
+    const res = await fetch(`${BASE_URL}/slug/${slug}`);
+    const envelope = await handleResponse<Product>(res);
+    return envelope.data;
+  },
+
   create: async (payload: CreateProductPayload): Promise<Product> => {
     const res = await fetch(BASE_URL, {
       method: "POST",

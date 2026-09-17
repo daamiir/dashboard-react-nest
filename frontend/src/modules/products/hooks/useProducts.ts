@@ -42,6 +42,14 @@ export function useProduct(id: string | undefined) {
   });
 }
 
+export function useProductBySlug(slug: string | undefined) {
+  return useQuery({
+    queryKey: [...PRODUCTS_QUERY_KEY, "slug", slug],
+    queryFn: () => productsApi.getBySlug(slug as string),
+    enabled: !!slug,
+  });
+}
+
 export function useCreateProduct() {
   const queryClient = useQueryClient();
   return useMutation({

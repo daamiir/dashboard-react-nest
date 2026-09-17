@@ -3,14 +3,14 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { useProduct } from "@/modules/products/hooks/useProducts";
+import { useProductBySlug } from "@/modules/products/hooks/useProducts";
 import { useCategories } from "@/modules/categories/hooks/useCategories";
 import { CATEGORY_SPECS } from "@/modules/products/config/category-specs.config";
 
 const ProductDetailsPage = () => {
-  const { id } = useParams<{ id: string }>();
+  const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
-  const { data: product, isLoading, isError } = useProduct(id);
+  const { data: product, isLoading, isError } = useProductBySlug(slug);
   const { data: categories = [] } = useCategories();
   const [variantIndex, setVariantIndex] = useState(0);
 

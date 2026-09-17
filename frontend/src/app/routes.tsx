@@ -30,7 +30,7 @@ export function AppRoutes() {
         <Route element={<BuyerLayout />}>
           <Route path="/" element={<LandingPage />} />
           <Route path="/shop" element={<ProductsPage />} />
-          <Route path="/shop/:id" element={<ProductDetailsPage />} />
+          <Route path="/shop/:slug" element={<ProductDetailsPage />} />
           <Route path="/cart" element={<div>Cart Page</div>} />
 
           {/* Buyer: protected routes */}

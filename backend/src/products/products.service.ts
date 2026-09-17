@@ -77,10 +77,7 @@ export class ProductsService {
     // Product has no single price -> sort by min/max price across its variants
     if (sortBy === 'price') {
       return {
-        variants: {
-          _min: sortOrder === 'asc' ? { price: 'asc' } : undefined,
-          _max: sortOrder === 'desc' ? { price: 'desc' } : undefined,
-        },
+        variants: { _min: { price: sortOrder } },
       } as Prisma.ProductOrderByWithRelationInput;
     }
 
@@ -148,6 +145,15 @@ export class ProductsService {
   async findOne(id: string) {
     const product = await this.prisma.product.findUnique({
       where: { id },
+      include: { variants: true },
+    });
+    if (!product) throw new NotFoundException('Product not found');
+    return product;
+  }
+
+  async findBySlug(slug: string) {
+    const product = await this.prisma.product.findUnique({
+      where: { slug },
       include: { variants: true },
     });
     if (!product) throw new NotFoundException('Product not found');
