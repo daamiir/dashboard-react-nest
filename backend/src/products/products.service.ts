@@ -12,6 +12,8 @@ import { FindProductsQueryDto } from './dto/find-products-query.dto';
 import { ProductVariantValidator } from './validators/product-variant.validator';
 import { CreateVariantDto } from './dto/create-variant.dto';
 import { UpdateVariantDto } from './dto/update-variant.dto';
+import { generateSlug } from './utils/slugify';
+import { generateSku } from './utils/generate-sku';
 
 @Injectable()
 export class ProductsService {
@@ -160,19 +162,31 @@ export class ProductsService {
     return product;
   }
 
-  create(createProductDto: CreateProductDto, adminId: string) {
+  async create(createProductDto: CreateProductDto, adminId: string) {
     const { variants, ...productData } = createProductDto;
 
+    // Fill in SKUs before validation/slug generation, since both depend on it
+    const variantsWithSku = await Promise.all(
+      variants.map(async (v) => ({
+        ...v,
+        sku: v.sku ?? (await generateSku(this.prisma)),
+      })),
+    );
+
     // Fail-fast: run before touching the database
-    ProductVariantValidator.validateAll(productData.attributes, variants);
+    ProductVariantValidator.validateAll(
+      productData.attributes,
+      variantsWithSku,
+    );
 
     // Nested write: Prisma wraps this in a single atomic SQL transaction,
     // so a product is never persisted without at least one variant
     return this.prisma.product.create({
       data: {
         ...productData,
+        slug: generateSlug(productData.name),
         createdById: adminId,
-        variants: { create: variants },
+        variants: { create: variantsWithSku },
       },
       include: { variants: true },
     });
@@ -187,14 +201,30 @@ export class ProductsService {
 
     const { variants, ...productData } = updateProductDto;
 
-    if (variants) {
+    // Fill in SKUs for any new variants (no id) before validation/slug/transaction
+    const variantsWithSku = variants
+      ? await Promise.all(
+          variants.map(async (v) => ({
+            ...v,
+            sku: v.sku ?? (await generateSku(this.prisma)),
+          })),
+        )
+      : undefined;
+
+    // Regenerate slug only if name changed, so unrelated saves keep the URL stable
+    const slugUpdate =
+      productData.name && productData.name !== existing.name
+        ? { slug: generateSlug(productData.name) }
+        : {};
+
+    if (variantsWithSku) {
       const productAttributes =
         productData.attributes ??
         (existing.attributes as Prisma.InputJsonValue);
-      ProductVariantValidator.validateAll(productAttributes, variants);
+      ProductVariantValidator.validateAll(productAttributes, variantsWithSku);
 
       // Guard against deleting every variant via the sync
-      const incomingIds = variants
+      const incomingIds = variantsWithSku
         .map((v) => v.id)
         .filter((vId): vId is string => vId !== undefined);
       const toDelete = existing.variants.filter(
@@ -202,7 +232,7 @@ export class ProductsService {
       );
       if (
         toDelete.length === existing.variants.length &&
-        variants.length === 0
+        variantsWithSku.length === 0
       ) {
         throw new BadRequestException(
           'Product must retain at least one variant',
@@ -211,8 +241,8 @@ export class ProductsService {
     }
 
     return this.prisma.$transaction(async (tx) => {
-      if (variants) {
-        const incomingIds = variants
+      if (variantsWithSku) {
+        const incomingIds = variantsWithSku
           .map((v) => v.id)
           .filter((vId): vId is string => vId !== undefined);
 
@@ -222,7 +252,7 @@ export class ProductsService {
         });
 
         // Smart sync: has id -> update (preserves id/history), no id -> create
-        for (const variant of variants) {
+        for (const variant of variantsWithSku) {
           const { id: variantId, ...variantData } = variant;
           if (variantId) {
             await tx.productVariant.update({
@@ -239,7 +269,10 @@ export class ProductsService {
 
       return tx.product.update({
         where: { id },
-        data: productData satisfies Prisma.ProductUpdateInput,
+        data: {
+          ...productData,
+          ...slugUpdate,
+        } satisfies Prisma.ProductUpdateInput,
         include: { variants: true },
       });
     });
@@ -254,9 +287,10 @@ export class ProductsService {
   async addVariant(productId: string, dto: CreateVariantDto) {
     const product = await this.findOne(productId);
     const productAttributes = product.attributes as Prisma.InputJsonValue;
-    ProductVariantValidator.validateAll(productAttributes, [dto]);
+    const sku = dto.sku ?? (await generateSku(this.prisma));
+    ProductVariantValidator.validateAll(productAttributes, [{ ...dto, sku }]);
     return this.prisma.productVariant.create({
-      data: { ...dto, productId },
+      data: { ...dto, sku, productId },
     });
   }
 
@@ -274,11 +308,12 @@ export class ProductsService {
 
     const product = await this.findOne(productId);
     const productAttributes = product.attributes as Prisma.InputJsonValue;
-    ProductVariantValidator.validateAll(productAttributes, [dto]);
+    const sku = dto.sku ?? variant.sku;
+    ProductVariantValidator.validateAll(productAttributes, [{ ...dto, sku }]);
 
     return this.prisma.productVariant.update({
       where: { id: variantId },
-      data: dto,
+      data: { ...dto, sku },
     });
   }
 

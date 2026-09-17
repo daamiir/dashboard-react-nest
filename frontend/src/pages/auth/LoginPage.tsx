@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 
 const LoginPage = () => {
   const navigate = useNavigate();
-  const { mutate: login, isPending, error } = useLoginMutation();
+  const { mutate: login, error } = useLoginMutation();
 
   const methods = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),

@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 
 const SignupPage = () => {
   const navigate = useNavigate();
-  const { mutate: register, isPending, error } = useRegisterMutation();
+  const { mutate: register, error } = useRegisterMutation();
 
   const methods = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),

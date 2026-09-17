@@ -2,7 +2,10 @@ import * as z from "zod";
 
 export const variantSchema = z.object({
   id: z.string().uuid().optional(),
-  sku: z.string().min(1, "SKU is required"),
+  sku: z
+    .string()
+    .optional()
+    .transform((v) => (v === "" ? undefined : v)),
   price: z.number().min(0, "Price must be positive"),
   stockQuantity: z.number().min(0, "Quantity of stock must be positive"),
   images: z.array(z.string()),
@@ -11,7 +14,6 @@ export const variantSchema = z.object({
 
 export const productSchema = z.object({
   name: z.string().min(1, "Product name is required"),
-  slug: z.string().min(1, "Slug is required"),
   categoryId: z.string().uuid("Category is required"),
   brand: z.string().min(1, "Brand is required"),
   description: z.string().min(1, "Description is required"),

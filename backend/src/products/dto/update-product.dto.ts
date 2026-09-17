@@ -22,11 +22,6 @@ export class UpdateProductDto {
   @IsOptional()
   @IsString()
   @IsNotEmpty()
-  slug?: string;
-
-  @IsOptional()
-  @IsString()
-  @IsNotEmpty()
   brand?: string;
 
   @IsOptional()

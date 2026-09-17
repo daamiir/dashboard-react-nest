@@ -26,7 +26,7 @@ function fieldSchema(field: SpecField): z.ZodTypeAny {
 
   if (!field.required) {
     schema = schema.optional();
-  } else if (field.type === "text" || field.type === "select") {
+  } else if (field.type === "text") {
     schema = (schema as z.ZodString).min(1, `${field.label} is required`);
   }
 

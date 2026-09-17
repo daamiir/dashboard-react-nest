@@ -33,8 +33,8 @@ async function main() {
 
   const product = await prisma.product.create({
     data: {
-      name: 'Apple iPhone 17 Pro',
-      slug: 'apple-iphone-17-pro',
+      name: 'Smartphone Apple iPhone 17 Pro',
+      slug: '',
       categoryId: smartphoneCategory.id,
       brand: 'Apple',
       description:
@@ -49,7 +49,6 @@ async function main() {
         frontCamera: 24,
         os: 'iOS',
         simType: 'eSIM + Nano-SIM',
-        color: 'Teal Titanium',
         weight: 191,
         has5G: true,
         hasNfc: true,
@@ -59,13 +58,13 @@ async function main() {
       variants: {
         create: [
           {
-            sku: 'IPH17PRO-256-TEAL',
+            sku: 'APL-IP17P-12-256-DPB',
             price: 1099.99,
             stockQuantity: 35,
             images: [
               'https://images.unsplash.com/photo-1695048065057-0243e33b6643',
             ],
-            attributes: { ram: 12, storage: 256 },
+            attributes: { ram: 12, storage: 256, color: 'Silver' },
           },
         ],
       },

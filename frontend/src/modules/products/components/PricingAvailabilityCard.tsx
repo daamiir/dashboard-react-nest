@@ -10,13 +10,6 @@ import { Trash2, Plus } from "lucide-react";
 import { FormInput } from "@/modules/auth/components/FormInput";
 import { FormStepper } from "./FormStepper";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useCategories } from "@/modules/categories/hooks/useCategories";
 import type { ProductFormValues } from "@/modules/products/schema";
 
@@ -76,11 +69,6 @@ export const PricingAvailabilityCard = () => {
                 <Trash2 className="h-4 w-4 text-destructive" />
               </Button>
             )}
-            <FormInput
-              name={`variants.${index}.sku`}
-              label="SKU"
-              placeholder="e.g. IPH17P-256-BLK"
-            />
             {variantSpecs.length > 0 && (
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {variantSpecs.map((spec) => (
@@ -115,7 +103,7 @@ export const PricingAvailabilityCard = () => {
                 label="Price ($)"
                 type="number"
                 min={0}
-                step="1"
+                step="0.01"
                 placeholder="0.00"
               />
               <FormStepper

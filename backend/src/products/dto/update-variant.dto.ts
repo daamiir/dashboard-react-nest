@@ -17,9 +17,10 @@ export class UpdateVariantDto {
   @IsUUID()
   id?: string;
 
+  @IsOptional()
   @IsString()
   @IsNotEmpty()
-  sku!: string;
+  sku?: string;
 
   @IsNumber()
   @Min(0)

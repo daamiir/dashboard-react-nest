@@ -7,12 +7,14 @@ import {
   IsInt,
   IsArray,
   IsObject,
+  IsOptional,
 } from 'class-validator';
 
 export class CreateVariantDto {
+  @IsOptional()
   @IsString()
   @IsNotEmpty()
-  sku!: string;
+  sku?: string;
 
   @IsNumber()
   @Min(0)

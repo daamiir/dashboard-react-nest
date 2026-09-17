@@ -34,9 +34,9 @@ function authHeaders(): HeadersInit {
 
 export type CreateProductPayload = Omit<
   Product,
-  "id" | "createdAt" | "createdById" | "variants"
+  "id" | "slug" | "createdAt" | "createdById" | "variants"
 > & {
-  variants: Omit<ProductVariant, "id">[];
+  variants: (Omit<ProductVariant, "id" | "sku"> & { sku?: string })[];
 };
 
 export type UpdateProductPayload = Partial<CreateProductPayload>;

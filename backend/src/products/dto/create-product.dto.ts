@@ -18,10 +18,6 @@ export class CreateProductDto {
 
   @IsString()
   @IsNotEmpty()
-  slug!: string;
-
-  @IsString()
-  @IsNotEmpty()
   brand!: string;
 
   @IsString()

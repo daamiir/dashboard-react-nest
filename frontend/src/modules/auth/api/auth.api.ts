@@ -1,4 +1,4 @@
-import type { Role, User } from "../types";
+import type { User } from "../types";
 
 const BASE_URL = `${import.meta.env.VITE_API_URL}/auth`;
 
