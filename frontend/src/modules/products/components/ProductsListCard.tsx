@@ -55,6 +55,7 @@ import {
 import type { Product, SortBy, SortOrder } from "../types";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useAuthStore } from "@/modules/auth/store/useAuthStore";
+import { useCategories } from "@/modules/categories/hooks/useCategories";
 
 const PAGE_SIZE = 7;
 
@@ -77,9 +78,21 @@ const getAvatarColor = (key: string) => {
   return AVATAR_PALETTE[Math.abs(hash) % AVATAR_PALETTE.length];
 };
 
-const formatPrice = (price: number) => {
-  return `$${price.toLocaleString("en-US")}`;
+const formatPrice = (price: number) => `$${price.toLocaleString("en-US")}`;
+
+// Range across variant prices, or a single value when they're all equal
+const formatPriceRange = (product: Product) => {
+  const prices = product.variants.map((v) => v.price);
+  const min = Math.min(...prices);
+  const max = Math.max(...prices);
+  return min === max
+    ? formatPrice(min)
+    : `${formatPrice(min)} – ${formatPrice(max)}`;
 };
+
+// Total stock summed across all variants
+const totalStock = (product: Product) =>
+  product.variants.reduce((sum, v) => sum + v.stockQuantity, 0);
 
 const formatDate = (iso: string) => {
   const date = new Date(iso);
@@ -90,7 +103,6 @@ const formatDate = (iso: string) => {
 
 const SORTABLE_COLUMNS: { field: SortBy; label: string }[] = [
   { field: "name", label: "Products" },
-  { field: "category", label: "Category" },
   { field: "brand", label: "Brand" },
   { field: "price", label: "Price" },
 ];
@@ -198,7 +210,7 @@ export const ProductsListCard = () => {
           </Button>
           <Button
             className="flex-1 bg-primary hover:bg-primary/90 sm:flex-none"
-            onClick={() => navigate("/seller/products/add")}
+            onClick={() => navigate("/admin/products/add")}
           >
             <Plus />
             Add Product
@@ -300,6 +312,7 @@ export const ProductsListCard = () => {
                     </button>
                   </TableHead>
                 ))}
+                <TableHead>Category</TableHead>
                 <TableHead>Stock</TableHead>
                 <TableHead className="hidden lg:table-cell">
                   Created At
@@ -312,7 +325,7 @@ export const ProductsListCard = () => {
                 <>
                   {Array.from({ length: PAGE_SIZE }).map((_, i) => (
                     <TableRow key={i}>
-                      <TableCell colSpan={7}>
+                      <TableCell colSpan={8}>
                         <Skeleton className="h-8 w-full" />
                       </TableCell>
                     </TableRow>
@@ -334,7 +347,7 @@ export const ProductsListCard = () => {
               {!isLoading && !isError && totalProducts === 0 && (
                 <TableRow>
                   <TableCell
-                    colSpan={7}
+                    colSpan={8}
                     className="py-10 text-center text-muted-foreground"
                   >
                     No products match your search.
@@ -422,7 +435,7 @@ const ProductActionsMenu = ({ product }: { product: Product }) => {
         </DropdownMenuTrigger>
         <DropdownMenuContent>
           <DropdownMenuItem
-            onClick={() => navigate(`/seller/products/edit/${product.id}`)}
+            onClick={() => navigate(`/admin/products/edit/${product.id}`)}
           >
             <Pencil />
             Edit
@@ -468,7 +481,12 @@ const ProductRow = ({
   selected: boolean;
   onToggle: () => void;
 }) => {
-  const sellerId = useAuthStore((state) => state.user?.id);
+  const userId = useAuthStore((state) => state.user?.id);
+  const { data: categories = [] } = useCategories();
+  const categoryName =
+    categories.find((c) => c.id === product.categoryId)?.name ?? "—";
+  const stock = totalStock(product);
+
   return (
     <TableRow data-state={selected ? "selected" : undefined}>
       <TableCell>
@@ -491,21 +509,19 @@ const ProductRow = ({
           {product.name}
         </div>
       </TableCell>
-      <TableCell className="text-muted-foreground">
-        {product.category}
-      </TableCell>
       <TableCell className="text-muted-foreground">{product.brand}</TableCell>
-      <TableCell>{formatPrice(product.price)}</TableCell>
+      <TableCell>{formatPriceRange(product)}</TableCell>
+      <TableCell className="text-muted-foreground">{categoryName}</TableCell>
       <TableCell>
-        <Badge variant={product.stockQuantity > 0 ? "success" : "destructive"}>
-          {product.stockQuantity > 0 ? "In Stock" : "Out of Stock"}
+        <Badge variant={stock > 0 ? "success" : "destructive"}>
+          {stock > 0 ? "In Stock" : "Out of Stock"}
         </Badge>
       </TableCell>
       <TableCell className="hidden text-muted-foreground lg:table-cell">
         {formatDate(product.createdAt)}
       </TableCell>
       <TableCell>
-        {sellerId === product.sellerId && (
+        {userId === product.createdById && (
           <ProductActionsMenu product={product} />
         )}
       </TableCell>
@@ -522,7 +538,12 @@ const ProductMobileCard = ({
   selected: boolean;
   onToggle: () => void;
 }) => {
-  const sellerId = useAuthStore((state) => state.user?.id);
+  const userId = useAuthStore((state) => state.user?.id);
+  const { data: categories = [] } = useCategories();
+  const categoryName =
+    categories.find((c) => c.id === product.categoryId)?.name ?? "—";
+  const stock = totalStock(product);
+
   return (
     <div
       data-state={selected ? "selected" : undefined}
@@ -545,23 +566,21 @@ const ProductMobileCard = ({
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-medium">{product.name}</p>
         <p className="truncate text-xs text-muted-foreground">
-          {product.category} · {product.brand}
+          {categoryName} · {product.brand}
         </p>
         <div className="mt-1.5 flex flex-wrap items-center gap-2">
           <span className="text-sm font-medium">
-            {formatPrice(product.price)}
+            {formatPriceRange(product)}
           </span>
-          <Badge
-            variant={product.stockQuantity > 0 ? "success" : "destructive"}
-          >
-            {product.stockQuantity > 0 ? "In Stock" : "Out of Stock"}
+          <Badge variant={stock > 0 ? "success" : "destructive"}>
+            {stock > 0 ? "In Stock" : "Out of Stock"}
           </Badge>
         </div>
         <p className="mt-1 text-xs text-muted-foreground">
           {formatDate(product.createdAt)}
         </p>
       </div>
-      {sellerId === product.sellerId && (
+      {userId === product.createdById && (
         <ProductActionsMenu product={product} />
       )}
     </div>

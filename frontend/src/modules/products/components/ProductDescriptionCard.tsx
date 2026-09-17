@@ -12,11 +12,12 @@ import {
 } from "@/components/ui/select";
 import { FormInput } from "@/modules/auth/components/FormInput";
 import { FormSelect } from "@/modules/products/components/FormSelect";
-import { CATEGORIES, type ProductFormValues } from "@/modules/products/schema";
+import type { ProductFormValues } from "@/modules/products/schema";
 import {
   CATEGORY_SPECS,
   type SpecField,
 } from "@/modules/products/config/category-specs.config";
+import { useCategories } from "@/modules/categories/hooks/useCategories";
 
 const SpecFieldInput = ({ field }: { field: SpecField }) => {
   const { register, control, formState } = useFormContext();
@@ -97,8 +98,18 @@ const SpecFieldInput = ({ field }: { field: SpecField }) => {
 
 export const ProductDescriptionCard = () => {
   const { register, control } = useFormContext<ProductFormValues>();
-  const category = useWatch({ control, name: "category" });
-  const specs = CATEGORY_SPECS[category] ?? [];
+  const categoryId = useWatch({ control, name: "categoryId" });
+  const { data: categories = [] } = useCategories();
+
+  const selectedCategory = categories.find((c) => c.id === categoryId);
+  const specs = selectedCategory
+    ? (CATEGORY_SPECS[selectedCategory.slug] ?? [])
+    : [];
+
+  const categoryOptions = categories.map((c) => ({
+    label: c.name,
+    value: c.id,
+  }));
 
   return (
     <Card className="px-4 py-4 sm:px-6 rounded-2xl bg-white p-4 sm:p-6 dark:border-gray-800 dark:bg-white/3">
@@ -112,7 +123,11 @@ export const ProductDescriptionCard = () => {
             label="Product Name"
             placeholder="e.g. Apple iPhone 17 Pro"
           />
-          <FormSelect name="category" label="Category" options={CATEGORIES} />
+          <FormSelect
+            name="categoryId"
+            label="Category"
+            options={categoryOptions}
+          />
         </div>
 
         <FormInput

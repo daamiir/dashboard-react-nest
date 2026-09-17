@@ -1,4 +1,4 @@
-import AppLayout from "@/components/layout/seller/AppLayout";
+import AppLayout from "@/components/layout/admin/AppLayout";
 import BuyerLayout from "@/components/layout/buyer/BuyerLayout";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { lazy, Suspense } from "react";
@@ -11,10 +11,10 @@ const ProductsPage = lazy(() => import("@/pages/buyer/ProductsPage"));
 const ProductDetailsPage = lazy(
   () => import("@/pages/buyer/ProductDetailsPage"),
 );
-const DashboardPage = lazy(() => import("@/pages/seller/DashboardPage"));
-const ProductsSellerPage = lazy(() => import("@/pages/seller/ProductsPage"));
-const AddProductPage = lazy(() => import("@/pages/seller/AddProductPage"));
-const EditProductPage = lazy(() => import("@/pages/seller/EditProductPage"));
+const DashboardPage = lazy(() => import("@/pages/admin/DashboardPage"));
+const ProductsAdminPage = lazy(() => import("@/pages/admin/ProductsPage"));
+const AddProductPage = lazy(() => import("@/pages/admin/AddProductPage"));
+const EditProductPage = lazy(() => import("@/pages/admin/EditProductPage"));
 const NotFoundPage = lazy(() => import("@/pages/NotFoundPage"));
 
 export function AppRoutes() {
@@ -33,23 +33,21 @@ export function AppRoutes() {
           <Route path="/shop/:id" element={<ProductDetailsPage />} />
           <Route path="/cart" element={<div>Cart Page</div>} />
 
-          {/*Buyer: protected routes*/}
-          <Route
-            element={<ProtectedRoute allowedRoles={["BUYER", "SELLER"]} />}
-          >
+          {/* Buyer: protected routes */}
+          <Route element={<ProtectedRoute allowedRoles={["BUYER", "ADMIN"]} />}>
             <Route path="/checkout" element={<div>Checkout Page</div>} />
           </Route>
         </Route>
 
-        {/*Seller: protected routes */}
-        <Route element={<ProtectedRoute allowedRoles={["SELLER"]} />}>
+        {/* Admin: protected routes */}
+        <Route element={<ProtectedRoute allowedRoles={["ADMIN"]} />}>
           <Route element={<AppLayout />}>
-            <Route path="/seller" element={<DashboardPage />} />
-            <Route path="/seller/products" element={<ProductsSellerPage />} />
+            <Route path="/admin" element={<DashboardPage />} />
+            <Route path="/admin/products" element={<ProductsAdminPage />} />
 
-            <Route path="/seller/products/add" element={<AddProductPage />} />
+            <Route path="/admin/products/add" element={<AddProductPage />} />
             <Route
-              path="/seller/products/edit/:id"
+              path="/admin/products/edit/:id"
               element={<EditProductPage />}
             />
           </Route>

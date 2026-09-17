@@ -9,9 +9,10 @@ export interface SpecField {
   unit?: string; // unit of measurement (GB, in, mAh, etc.)
 }
 
+// Keyed by category slug (from backend Category.slug), not a hardcoded enum
 export const CATEGORY_SPECS: Record<string, SpecField[]> = {
   // 1. SMARTPHONES
-  SMARTPHONE: [
+  smartphone: [
     { key: "ram", label: "RAM", type: "number", unit: "GB", required: true },
     {
       key: "storage",
@@ -65,7 +66,7 @@ export const CATEGORY_SPECS: Record<string, SpecField[]> = {
   ],
 
   // 2. TABLETS
-  TABLET: [
+  tablet: [
     { key: "ram", label: "RAM", type: "number", unit: "GB", required: true },
     {
       key: "storage",
@@ -109,7 +110,7 @@ export const CATEGORY_SPECS: Record<string, SpecField[]> = {
   ],
 
   // 3. LAPTOPS
-  LAPTOP: [
+  laptop: [
     {
       key: "processor",
       label: "Processor (CPU)",
@@ -163,7 +164,7 @@ export const CATEGORY_SPECS: Record<string, SpecField[]> = {
   ],
 
   // 4. HEADPHONES
-  HEADPHONES: [
+  headphones: [
     {
       key: "type",
       label: "Headphone Type",

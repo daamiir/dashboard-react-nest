@@ -9,7 +9,6 @@ import { FormInput } from "./FormInput";
 import { Button } from "@/components/ui/button";
 import { Field, FieldDescription, FieldGroup } from "@/components/ui/field";
 import { Link } from "react-router-dom";
-import { FormRadioInput } from "./FormRadioInput";
 
 export const SignupForm = () => {
   return (
@@ -25,11 +24,6 @@ export const SignupForm = () => {
           <FormInput name="name" label="Name" placeholder="John Doe" />
           <FormInput name="email" label="Email" placeholder="m@example.com" />
           <FormInput name="password" label="Password" />
-
-          <div className="flex justify-between items-center">
-            <FormRadioInput name="role" label="Buyer" value={"BUYER"} />
-            <FormRadioInput name="role" label="Seller" value={"SELLER"} />
-          </div>
 
           <Field>
             <Button type="submit">Create Account</Button>

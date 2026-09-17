@@ -1,26 +1,40 @@
-export type Category = "SMARTPHONE" | "LAPTOP" | "TABLET" | "HEADPHONES";
+export interface Category {
+  id: string;
+  name: string;
+  slug: string;
+  parentId: string | null;
+}
+
+export interface ProductVariant {
+  id: string;
+  sku: string;
+  price: number;
+  stockQuantity: number;
+  images: string[];
+  attributes: Record<string, unknown>;
+}
 
 export interface Product {
   id: string;
   name: string;
-  category: Category;
+  slug: string;
+  categoryId: string;
   brand: string;
-  price: number;
-  stockQuantity: number;
-  images: string[];
   description: string;
   attributes: Record<string, unknown>;
   createdAt: string; // ISO date string
 
-  sellerId: string;
+  createdById: string;
+
+  variants: ProductVariant[];
 }
 
-export type SortBy = "name" | "category" | "brand" | "price";
+export type SortBy = "name" | "brand" | "price";
 export type SortOrder = "asc" | "desc";
 
 export interface ProductQueryParams {
   search?: string;
-  category?: Category;
+  categoryId?: string;
   minPrice?: number;
   maxPrice?: number;
   ram?: number;

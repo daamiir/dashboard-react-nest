@@ -12,6 +12,7 @@ import {
 
 import { toast } from "sonner";
 import type { ProductQueryParams } from "../types";
+import type { VariantFormValues } from "../schema";
 
 export const PRODUCTS_QUERY_KEY = ["products"] as const;
 
@@ -83,5 +84,63 @@ export function useDeleteProduct() {
     },
     onError: (err: Error) =>
       toast.error(err.message || "Failed to delete product"),
+  });
+}
+export function useAddVariant() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      productId,
+      payload,
+    }: {
+      productId: string;
+      payload: Omit<VariantFormValues, "id">;
+    }) => productsApi.addVariant(productId, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: PRODUCTS_QUERY_KEY });
+      toast.success("Variant added");
+    },
+    onError: (err: Error) =>
+      toast.error(err.message || "Failed to add variant"),
+  });
+}
+
+export function useUpdateVariant() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      productId,
+      variantId,
+      payload,
+    }: {
+      productId: string;
+      variantId: string;
+      payload: VariantFormValues;
+    }) => productsApi.updateVariant(productId, variantId, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: PRODUCTS_QUERY_KEY });
+      toast.success("Variant updated");
+    },
+    onError: (err: Error) =>
+      toast.error(err.message || "Failed to update variant"),
+  });
+}
+
+export function useDeleteVariant() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      productId,
+      variantId,
+    }: {
+      productId: string;
+      variantId: string;
+    }) => productsApi.removeVariant(productId, variantId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: PRODUCTS_QUERY_KEY });
+      toast.success("Variant deleted");
+    },
+    onError: (err: Error) =>
+      toast.error(err.message || "Failed to delete variant"),
   });
 }

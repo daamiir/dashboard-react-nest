@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -14,10 +13,8 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { useProducts } from "@/modules/products/hooks/useProducts";
-import type { Category } from "@/modules/products/types";
+import { useCategories } from "@/modules/categories/hooks/useCategories";
 import { useDebounce } from "@/hooks/useDebounce";
-
-const CATEGORIES: Category[] = ["SMARTPHONE", "LAPTOP", "TABLET", "HEADPHONES"];
 
 // smartphone-only for now, so other categories fall back to price-only.
 const RAM_OPTIONS = [4, 6, 8, 12, 16];
@@ -27,7 +24,8 @@ const PAGE_SIZE = 8;
 
 const ProductsPage = () => {
   const navigate = useNavigate();
-  const [category, setCategory] = useState<Category | undefined>("SMARTPHONE");
+  const { data: categories = [] } = useCategories();
+  const [categoryId, setCategoryId] = useState<string | undefined>();
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [ram, setRam] = useState<number | undefined>();
@@ -39,7 +37,7 @@ const ProductsPage = () => {
 
   const { data, isLoading, isError } = useProducts(
     {
-      category,
+      categoryId,
       minPrice: debouncedMinPrice ? Number(debouncedMinPrice) : undefined,
       maxPrice: debouncedMaxPrice ? Number(debouncedMaxPrice) : undefined,
       ram,
@@ -53,8 +51,11 @@ const ProductsPage = () => {
   const products = data?.data ?? [];
   const totalPages = data?.meta.totalPages ?? 1;
 
-  const handleCategoryClick = (next: Category) => {
-    setCategory((prev) => (prev === next ? undefined : next));
+  const selectedCategory = categories.find((c) => c.id === categoryId);
+  const isSmartphoneCategory = selectedCategory?.slug === "smartphone";
+
+  const handleCategoryClick = (next: string) => {
+    setCategoryId((prev) => (prev === next ? undefined : next));
     setPage(1);
   };
 
@@ -62,17 +63,17 @@ const ProductsPage = () => {
     <div className="max-w-7xl mx-auto">
       {/* Categories */}
       <div className="flex gap-3 overflow-x-auto pb-4 mb-6 border-b">
-        {CATEGORIES.map((c) => (
+        {categories.map((c) => (
           <button
-            key={c}
-            onClick={() => handleCategoryClick(c)}
+            key={c.id}
+            onClick={() => handleCategoryClick(c.id)}
             className={`shrink-0 rounded-full border px-4 py-2 text-sm transition-colors ${
-              category === c
+              categoryId === c.id
                 ? "bg-primary text-primary-foreground border-primary"
                 : "hover:bg-muted"
             }`}
           >
-            {c.charAt(0) + c.slice(1).toLowerCase()}
+            {c.name}
           </button>
         ))}
       </div>
@@ -107,7 +108,7 @@ const ProductsPage = () => {
             </div>
           </div>
 
-          {category === "SMARTPHONE" && (
+          {isSmartphoneCategory && (
             <>
               <div>
                 <h3 className="text-sm font-semibold mb-2">RAM</h3>
@@ -165,7 +166,7 @@ const ProductsPage = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 content-start">
             {isLoading &&
               Array.from({ length: PAGE_SIZE }).map((_, i) => (
-                <Skeleton key={i} className="aspect-[3/4] rounded-lg" />
+                <Skeleton key={i} className="aspect-3/4 rounded-lg" />
               ))}
 
             {isError && (
@@ -182,31 +183,35 @@ const ProductsPage = () => {
 
             {!isLoading &&
               !isError &&
-              products.map((product) => (
-                <button
-                  key={product.id}
-                  onClick={() => navigate(`/shop/${product.id}`)}
-                  className="rounded-lg border overflow-hidden flex flex-col text-left hover:shadow-md transition-shadow"
-                >
-                  <div className="aspect-square bg-muted overflow-hidden">
-                    {product.images[0] && (
-                      <img
-                        src={product.images[0]}
-                        alt={product.name}
-                        className="h-full w-full object-cover"
-                      />
-                    )}
-                  </div>
-                  <div className="p-3 space-y-1">
-                    <p className="text-sm font-medium line-clamp-1">
-                      {product.name}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      ${product.price.toLocaleString("en-US")}
-                    </p>
-                  </div>
-                </button>
-              ))}
+              products.map((product) => {
+                // Storefront card shows the first variant's price/image
+                const variant = product.variants[0];
+                return (
+                  <button
+                    key={product.id}
+                    onClick={() => navigate(`/shop/${product.id}`)}
+                    className="rounded-lg border overflow-hidden flex flex-col text-left hover:shadow-md transition-shadow"
+                  >
+                    <div className="aspect-square bg-muted overflow-hidden">
+                      {variant?.images[0] && (
+                        <img
+                          src={variant.images[0]}
+                          alt={product.name}
+                          className="h-full w-full object-cover"
+                        />
+                      )}
+                    </div>
+                    <div className="p-3 space-y-1">
+                      <p className="text-sm font-medium line-clamp-1">
+                        {product.name}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        ${variant?.price.toLocaleString("en-US") ?? "—"}
+                      </p>
+                    </div>
+                  </button>
+                );
+              })}
           </div>
 
           {/* Pagination */}

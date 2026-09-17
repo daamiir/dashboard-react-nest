@@ -1,58 +1,88 @@
-// import { Prisma, PrismaClient, Role } from '@prisma/client';
-// import { PrismaPg } from '@prisma/adapter-pg';
-// import { Pool } from 'pg';
-// import * as bcrypt from 'bcrypt';
-// import smartphones from './smartphones.data';
+import { PrismaClient, Role } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { Pool } from 'pg';
+import * as bcrypt from 'bcrypt';
 
-// const connectionString = process.env.DATABASE_URL;
-// const pool = new Pool({ connectionString });
-// const adapter = new PrismaPg(pool);
-// const prisma = new PrismaClient({ adapter });
+const connectionString = process.env.DATABASE_URL;
+const pool = new Pool({ connectionString });
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({ adapter });
 
-// async function main() {
-//   await prisma.product.deleteMany();
+async function main() {
+  await prisma.productVariant.deleteMany();
+  await prisma.product.deleteMany();
 
-//   const passwordHash = await bcrypt.hash('Seller123!', 10);
+  const passwordHash = await bcrypt.hash('Admin123!', 10);
 
-//   const seller = await prisma.user.upsert({
-//     where: { email: 'seller@demo.com' },
-//     update: {},
-//     create: {
-//       email: 'seller@demo.com',
-//       name: 'Demo Seller',
-//       passwordHash,
-//       role: Role.SELLER,
-//     },
-//   });
+  const admin = await prisma.user.upsert({
+    where: { email: 'admin@demo.com' },
+    update: {},
+    create: {
+      email: 'admin@demo.com',
+      name: 'Demo Admin',
+      passwordHash,
+      role: Role.ADMIN,
+    },
+  });
 
-//   const productData = smartphones.map((p) => ({
-//     name: p.name,
-//     category: p.category,
-//     brand: p.brand,
-//     price: p.price,
-//     stockQuantity: p.stockQuantity,
-//     images: p.images,
-//     description: p.description,
-//     attributes: p.attributes,
-//     sellerId: seller.id,
-//   }));
+  const smartphoneCategory = await prisma.category.upsert({
+    where: { slug: 'smartphone' },
+    update: {},
+    create: { name: 'Smartphone', slug: 'smartphone' },
+  });
 
-//   const result = await prisma.product.createMany({
-//     data: productData,
-//     skipDuplicates: true,
-//   });
+  const product = await prisma.product.create({
+    data: {
+      name: 'Apple iPhone 17 Pro',
+      slug: 'apple-iphone-17-pro',
+      categoryId: smartphoneCategory.id,
+      brand: 'Apple',
+      description:
+        'Powered by the A19 Pro chip with 12GB RAM, 120Hz ProMotion screen, and upgraded 48MP lenses on all rear cameras.',
+      attributes: {
+        screenSize: 6.3,
+        screenType: 'OLED',
+        refreshRate: 120,
+        processor: 'Apple A19 Pro',
+        battery: 4100,
+        mainCamera: 48,
+        frontCamera: 24,
+        os: 'iOS',
+        simType: 'eSIM + Nano-SIM',
+        color: 'Teal Titanium',
+        weight: 191,
+        has5G: true,
+        hasNfc: true,
+        eSimSupport: true,
+      },
+      createdById: admin.id,
+      variants: {
+        create: [
+          {
+            sku: 'IPH17PRO-256-TEAL',
+            price: 1099.99,
+            stockQuantity: 35,
+            images: [
+              'https://images.unsplash.com/photo-1695048065057-0243e33b6643',
+            ],
+            attributes: { ram: 12, storage: 256 },
+          },
+        ],
+      },
+    },
+  });
 
-//   console.log(
-//     `Seeded ${result.count} products for seller ${seller.email} (${seller.id}).`,
-//   );
-// }
+  console.log(
+    `Seeded product "${product.name}" for admin ${admin.email} (${admin.id}).`,
+  );
+}
 
-// main()
-//   .catch((e) => {
-//     console.error(e);
-//     process.exit(1);
-//   })
-//   .finally(async () => {
-//     await prisma.$disconnect();
-//     await pool.end();
-//   });
+main()
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+    await pool.end();
+  });

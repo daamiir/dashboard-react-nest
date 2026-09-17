@@ -1,14 +1,18 @@
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { useProduct } from "@/modules/products/hooks/useProducts";
+import { useCategories } from "@/modules/categories/hooks/useCategories";
 import { CATEGORY_SPECS } from "@/modules/products/config/category-specs.config";
 
 const ProductDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data: product, isLoading, isError } = useProduct(id);
+  const { data: categories = [] } = useCategories();
+  const [variantIndex, setVariantIndex] = useState(0);
 
   if (isLoading) {
     return (
@@ -40,8 +44,10 @@ const ProductDetailsPage = () => {
     );
   }
 
-  const specFields = CATEGORY_SPECS[product.category] ?? [];
+  const category = categories.find((c) => c.id === product.categoryId);
+  const specFields = category ? (CATEGORY_SPECS[category.slug] ?? []) : [];
   const attributes = product.attributes ?? {};
+  const variant = product.variants[variantIndex] ?? product.variants[0];
 
   return (
     <div className="max-w-5xl mx-auto">
@@ -49,17 +55,17 @@ const ProductDetailsPage = () => {
         {/* Images */}
         <div className="space-y-3">
           <div className="aspect-square rounded-lg overflow-hidden bg-muted">
-            {product.images[0] && (
+            {variant.images[0] && (
               <img
-                src={product.images[0]}
+                src={variant.images[0]}
                 alt={product.name}
                 className="h-full w-full object-cover"
               />
             )}
           </div>
-          {product.images.length > 1 && (
+          {variant.images.length > 1 && (
             <div className="grid grid-cols-4 gap-2">
-              {product.images.slice(1, 5).map((src, i) => (
+              {variant.images.slice(1, 5).map((src, i) => (
                 <div
                   key={i}
                   className="aspect-square rounded-md overflow-hidden bg-muted"
@@ -82,20 +88,41 @@ const ProductDetailsPage = () => {
             <h1 className="text-2xl font-semibold mt-1">{product.name}</h1>
             <div className="mt-3 flex items-center gap-3">
               <span className="text-2xl font-semibold">
-                ${product.price.toLocaleString("en-US")}
+                ${variant.price.toLocaleString("en-US")}
               </span>
               <Badge
-                variant={product.stockQuantity > 0 ? "success" : "destructive"}
+                variant={variant.stockQuantity > 0 ? "success" : "destructive"}
               >
-                {product.stockQuantity > 0 ? "In Stock" : "Out of Stock"}
+                {variant.stockQuantity > 0 ? "In Stock" : "Out of Stock"}
               </Badge>
             </div>
           </div>
 
+          {product.variants.length > 1 && (
+            <div>
+              <h2 className="text-sm font-semibold mb-2">Variant</h2>
+              <div className="flex flex-wrap gap-2">
+                {product.variants.map((v, i) => (
+                  <button
+                    key={v.id}
+                    onClick={() => setVariantIndex(i)}
+                    className={`rounded-md border px-3 py-1.5 text-sm transition-colors ${
+                      i === variantIndex
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "hover:bg-muted"
+                    }`}
+                  >
+                    {v.sku}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           <Button
             size="lg"
             className="w-full sm:w-auto"
-            disabled={product.stockQuantity === 0}
+            disabled={variant.stockQuantity === 0}
           >
             Add to Cart
           </Button>

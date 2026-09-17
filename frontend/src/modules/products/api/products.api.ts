@@ -4,7 +4,9 @@ import type {
   PaginationMeta,
   Product,
   ProductQueryParams,
+  ProductVariant,
 } from "../types";
+import type { VariantFormValues } from "../schema";
 
 const BASE_URL = `${import.meta.env.VITE_API_URL}/products`;
 
@@ -25,16 +27,24 @@ async function handleResponse<T>(res: Response): Promise<ApiEnvelope<T>> {
   return res.json();
 }
 
+function authHeaders(): HeadersInit {
+  const token = useAuthStore.getState().token;
+  return { Authorization: `Bearer ${token}` };
+}
+
 export type CreateProductPayload = Omit<
   Product,
-  "id" | "createdAt" | "sellerId"
->;
+  "id" | "createdAt" | "createdById" | "variants"
+> & {
+  variants: Omit<ProductVariant, "id">[];
+};
+
 export type UpdateProductPayload = Partial<CreateProductPayload>;
 
 function buildQueryParams(query: ProductQueryParams): URLSearchParams {
   const params = new URLSearchParams();
   if (query.search) params.set("search", query.search);
-  if (query.category) params.set("category", query.category);
+  if (query.categoryId) params.set("categoryId", query.categoryId);
   if (query.minPrice !== undefined)
     params.set("minPrice", String(query.minPrice));
   if (query.maxPrice !== undefined)
@@ -62,13 +72,10 @@ export const productsApi = {
   getMyProducts: async (
     query: ProductQueryParams,
   ): Promise<PaginatedResponse<Product>> => {
-    const ACCESS_TOKEN = useAuthStore.getState().token;
     const params = buildQueryParams(query);
 
     const res = await fetch(`${BASE_URL}/me?${params}`, {
-      headers: {
-        Authorization: `Bearer ${ACCESS_TOKEN}`,
-      },
+      headers: authHeaders(),
     });
     const envelope = await handleResponse<Product[]>(res);
     return { data: envelope.data, meta: envelope.meta! };
@@ -81,13 +88,9 @@ export const productsApi = {
   },
 
   create: async (payload: CreateProductPayload): Promise<Product> => {
-    const ACCESS_TOKEN = useAuthStore.getState().token;
     const res = await fetch(BASE_URL, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${ACCESS_TOKEN}`,
-      },
+      headers: { "Content-Type": "application/json", ...authHeaders() },
       body: JSON.stringify(payload),
     });
     const envelope = await handleResponse<Product>(res);
@@ -98,13 +101,9 @@ export const productsApi = {
     id: string,
     payload: UpdateProductPayload,
   ): Promise<Product> => {
-    const ACCESS_TOKEN = useAuthStore.getState().token;
     const res = await fetch(`${BASE_URL}/${id}`, {
       method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${ACCESS_TOKEN}`,
-      },
+      headers: { "Content-Type": "application/json", ...authHeaders() },
       body: JSON.stringify(payload),
     });
     const envelope = await handleResponse<Product>(res);
@@ -112,14 +111,50 @@ export const productsApi = {
   },
 
   remove: async (id: string): Promise<Product> => {
-    const ACCESS_TOKEN = useAuthStore.getState().token;
     const res = await fetch(`${BASE_URL}/${id}`, {
       method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${ACCESS_TOKEN}`,
-      },
+      headers: authHeaders(),
     });
     const envelope = await handleResponse<Product>(res);
+    return envelope.data;
+  },
+
+  addVariant: async (
+    productId: string,
+    payload: Omit<VariantFormValues, "id">,
+  ): Promise<ProductVariant> => {
+    const res = await fetch(`${BASE_URL}/${productId}/variants`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...authHeaders() },
+      body: JSON.stringify(payload),
+    });
+    const envelope = await handleResponse<ProductVariant>(res);
+    return envelope.data;
+  },
+
+  updateVariant: async (
+    productId: string,
+    variantId: string,
+    payload: VariantFormValues,
+  ): Promise<ProductVariant> => {
+    const res = await fetch(`${BASE_URL}/${productId}/variants/${variantId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", ...authHeaders() },
+      body: JSON.stringify(payload),
+    });
+    const envelope = await handleResponse<ProductVariant>(res);
+    return envelope.data;
+  },
+
+  removeVariant: async (
+    productId: string,
+    variantId: string,
+  ): Promise<ProductVariant> => {
+    const res = await fetch(`${BASE_URL}/${productId}/variants/${variantId}`, {
+      method: "DELETE",
+      headers: authHeaders(),
+    });
+    const envelope = await handleResponse<ProductVariant>(res);
     return envelope.data;
   },
 };

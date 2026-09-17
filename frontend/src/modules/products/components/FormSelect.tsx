@@ -8,11 +8,24 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 
+export interface SelectOption {
+  label: string;
+  value: string;
+}
+
 interface FormSelectProps {
   name: string;
   label: string;
   placeholder?: string;
-  options: readonly string[];
+  options: readonly string[] | readonly SelectOption[];
+}
+
+function normalizeOptions(
+  options: readonly string[] | readonly SelectOption[],
+): SelectOption[] {
+  return options.map((opt) =>
+    typeof opt === "string" ? { label: opt, value: opt } : opt,
+  );
 }
 
 export function FormSelect({
@@ -27,6 +40,7 @@ export function FormSelect({
   } = useFormContext();
 
   const error = get(errors, name)?.message as string | undefined;
+  const normalizedOptions = normalizeOptions(options);
 
   return (
     <div className="space-y-2">
@@ -40,9 +54,9 @@ export function FormSelect({
               <SelectValue placeholder={placeholder} />
             </SelectTrigger>
             <SelectContent>
-              {options.map((option) => (
-                <SelectItem key={option} value={option}>
-                  {option}
+              {normalizedOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
                 </SelectItem>
               ))}
             </SelectContent>
