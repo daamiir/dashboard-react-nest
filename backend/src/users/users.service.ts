@@ -2,6 +2,7 @@ import { Injectable, ConflictException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
 import { RegisterDto } from '../auth/dto/register.dto';
+import { Role } from '@prisma/client';
 
 const SALT_ROUNDS = 10;
 
@@ -24,7 +25,7 @@ export class UsersService {
         email: dto.email,
         passwordHash,
         name: dto.name,
-        role: dto.role ?? 'BUYER',
+        role: Role.BUYER,
       },
     });
   }
