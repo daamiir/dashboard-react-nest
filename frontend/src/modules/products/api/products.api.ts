@@ -46,18 +46,6 @@ export const productsApi = {
     return { data: envelope.data, meta: envelope.meta! };
   },
 
-  getMyProducts: async (
-    query: ProductQueryParams,
-  ): Promise<PaginatedResponse<Product>> => {
-    const params = buildQueryParams(query);
-
-    const res = await fetch(`${BASE_URL}/me?${params}`, {
-      headers: authHeaders(),
-    });
-    const envelope = await handleResponse<Product[]>(res);
-    return { data: envelope.data, meta: envelope.meta! };
-  },
-
   getOne: async (id: string): Promise<Product> => {
     const res = await fetch(`${BASE_URL}/${id}`);
     const envelope = await handleResponse<Product>(res);

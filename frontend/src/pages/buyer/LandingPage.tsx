@@ -8,11 +8,11 @@ const LandingPage = () => {
       {/* Hero */}
       <section className="py-20 sm:py-28 text-center">
         <h1 className="text-3xl sm:text-5xl font-bold tracking-tight">
-          Everything you need,
-          <br className="hidden sm:block" /> from sellers you trust
+          Electronics and home appliances,
+          <br className="hidden sm:block" /> delivered to your door
         </h1>
         <p className="mt-4 text-muted-foreground text-base sm:text-lg max-w-xl mx-auto">
-          Discover products from independent sellers, all in one place.
+          Smartphones, laptops, TVs and more, at a fair price.
         </p>
         <div className="mt-8 flex items-center justify-center gap-3">
           <Button size="lg" asChild>
@@ -45,7 +45,7 @@ const LandingPage = () => {
             </div>
             <h3 className="font-semibold">Fast delivery</h3>
             <p className="text-sm text-muted-foreground">
-              Reliable shipping from sellers near you.
+              Reliable delivery across the city.
             </p>
           </div>
           <div className="flex flex-col items-center text-center gap-3">

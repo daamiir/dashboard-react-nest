@@ -16,21 +16,11 @@ import type { VariantFormValues } from "../schema";
 
 export const PRODUCTS_QUERY_KEY = ["products"] as const;
 
-export function useProducts(query: ProductQueryParams, enabled: boolean) {
+export function useProducts(query: ProductQueryParams) {
   return useQuery({
     queryKey: [...PRODUCTS_QUERY_KEY, query],
     queryFn: () => productsApi.getAll(query),
     placeholderData: keepPreviousData,
-    enabled,
-  });
-}
-
-export function useMyProducts(query: ProductQueryParams, enabled: boolean) {
-  return useQuery({
-    queryKey: [...PRODUCTS_QUERY_KEY, "my-products", query],
-    queryFn: () => productsApi.getMyProducts(query),
-    placeholderData: keepPreviousData,
-    enabled,
   });
 }
 

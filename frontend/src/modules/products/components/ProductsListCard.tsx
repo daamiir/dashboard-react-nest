@@ -26,7 +26,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/utils/cn";
 import { useDebounce } from "@/hooks/useDebounce";
 
-import { useMyProducts, useProducts } from "../hooks/useProducts";
+import { useProducts } from "../hooks/useProducts";
 import type { SortBy, SortOrder } from "../types";
 import { ProductRow } from "./ProductRow";
 import { ProductMobileCard } from "./ProductMobileCard";
@@ -48,19 +48,11 @@ export const ProductsListCard = () => {
   const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
-  const [viewMode, setViewMode] = useState<"all" | "my-products">("all");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   const query = { search: debouncedSearch, sortBy, sortOrder, page, limit };
-  const allProducts = useProducts(query, viewMode === "all");
-  const myProducts = useMyProducts(query, viewMode === "my-products");
 
-  // Active query result for the current view
-  const {
-    data: response,
-    isLoading,
-    isError,
-  } = viewMode === "all" ? allProducts : myProducts;
+  const { data: response, isLoading, isError } = useProducts(query);
 
   const pageProducts = response?.data ?? [];
   const totalPages = response?.meta.totalPages ?? 1;
@@ -109,18 +101,11 @@ export const ProductsListCard = () => {
     });
   };
 
-  const toggleViewMode = () => {
-    setViewMode((prev) => (prev === "all" ? "my-products" : "all"));
-    setPage(1);
-  };
-
   return (
     <Card className="rounded-2xl bg-white p-4 sm:p-6 dark:border-gray-800 dark:bg-white/3">
       <CardHeader className="flex flex-col gap-4 p-0 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-lg font-semibold">
-            {viewMode === "all" ? "All" : "My"} Products List
-          </h1>
+          <h1 className="text-lg font-semibold">Products</h1>
           <p className="text-sm text-muted-foreground">
             Track your store's progress to boost your sales.
           </p>
@@ -164,12 +149,6 @@ export const ProductsListCard = () => {
                   {n}
                 </Button>
               ))}
-              <Button
-                variant={viewMode === "all" ? "outline" : "default"}
-                onClick={toggleViewMode}
-              >
-                My Products
-              </Button>
             </div>
             <Button variant="outline" className="w-full sm:w-auto">
               <SlidersHorizontal />

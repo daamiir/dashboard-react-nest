@@ -2,7 +2,6 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { cn } from "@/utils/cn";
-import { useAuthStore } from "@/modules/auth/store/useAuthStore";
 import { useCategoryName } from "../hooks/useCategoryName";
 import type { Product } from "../types";
 import {
@@ -22,7 +21,6 @@ export const ProductRow = ({
   selected: boolean;
   onToggle: () => void;
 }) => {
-  const userId = useAuthStore((state) => state.user?.id);
   const categoryName = useCategoryName(product.categoryId);
   const inStock = totalStock(product) > 0;
 
@@ -60,9 +58,7 @@ export const ProductRow = ({
         {formatDate(product.createdAt)}
       </TableCell>
       <TableCell>
-        {userId === product.createdById && (
-          <ProductActionsMenu product={product} />
-        )}
+        <ProductActionsMenu product={product} />
       </TableCell>
     </TableRow>
   );

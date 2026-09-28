@@ -31,16 +31,6 @@ export class ProductsController {
     return this.productsService.findAll(query);
   }
 
-  @Get('me')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN)
-  findMyProducts(
-    @Query() query: FindProductsQueryDto,
-    @CurrentUser() user: { id: string },
-  ) {
-    return this.productsService.findMyProducts(user.id, query);
-  }
-
   @Get('slug/:slug')
   findBySlug(@Param('slug') slug: string) {
     return this.productsService.findBySlug(slug);

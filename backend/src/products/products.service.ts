@@ -115,35 +115,6 @@ export class ProductsService {
     };
   }
 
-  async findMyProducts(userId: string, query: FindProductsQueryDto) {
-    const { page, limit } = query;
-    const skip = (page! - 1) * limit!;
-    const where = await this.buildWhere(query);
-    where.createdById = userId;
-    const orderBy = this.buildOrderBy(query);
-
-    const [data, total] = await Promise.all([
-      this.prisma.product.findMany({
-        where,
-        orderBy,
-        skip,
-        take: limit,
-        include: { variants: true },
-      }),
-      this.prisma.product.count({ where }),
-    ]);
-
-    return {
-      data,
-      meta: {
-        total,
-        page: page!,
-        limit: limit!,
-        totalPages: Math.ceil(total / limit!),
-      },
-    };
-  }
-
   async findOne(id: string) {
     const product = await this.prisma.product.findUnique({
       where: { id },
