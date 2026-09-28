@@ -120,18 +120,15 @@ const ProductsPage = () => {
   const debouncedMin = useDebounce(minPrice, 400);
   const debouncedMax = useDebounce(maxPrice, 400);
 
-  const { data, isLoading, isError } = useProducts(
-    {
-      categoryId,
-      minPrice: debouncedMin ? Number(debouncedMin) : undefined,
-      maxPrice: debouncedMax ? Number(debouncedMax) : undefined,
-      ram,
-      storage,
-      page,
-      limit: PAGE_SIZE,
-    },
-    true,
-  );
+  const { data, isLoading, isError } = useProducts({
+    categoryId,
+    minPrice: debouncedMin ? Number(debouncedMin) : undefined,
+    maxPrice: debouncedMax ? Number(debouncedMax) : undefined,
+    ram,
+    storage,
+    page,
+    limit: PAGE_SIZE,
+  });
 
   const products = data?.data ?? [];
   const total = data?.meta.total ?? 0;
