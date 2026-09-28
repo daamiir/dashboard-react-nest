@@ -2,10 +2,7 @@ import * as z from "zod";
 
 export const variantSchema = z.object({
   id: z.string().uuid().optional(),
-  sku: z
-    .string()
-    .optional()
-    .transform((v) => (v === "" ? undefined : v)),
+  sku: z.string().optional(),
   price: z.number().min(0, "Price must be positive"),
   stockQuantity: z.number().min(0, "Quantity of stock must be positive"),
   images: z.array(z.string()),
@@ -23,4 +20,5 @@ export const productSchema = z.object({
 });
 
 export type VariantFormValues = z.infer<typeof variantSchema>;
+export type ProductFormInput = z.input<typeof productSchema>;
 export type ProductFormValues = z.infer<typeof productSchema>;

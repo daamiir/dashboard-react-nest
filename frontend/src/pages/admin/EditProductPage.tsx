@@ -15,6 +15,7 @@ import {
 import { useCategories } from "@/modules/categories/hooks/useCategories";
 import {
   productSchema,
+  type ProductFormInput,
   type ProductFormValues,
 } from "@/modules/products/schema";
 import { buildAttributesSchema } from "@/modules/products/config/build-attributes-schema";
@@ -26,7 +27,7 @@ const EditProductPage = () => {
   const updateProduct = useUpdateProduct();
   const { data: categories = [] } = useCategories();
 
-  const methods = useForm<ProductFormValues>({
+  const methods = useForm<ProductFormInput, unknown, ProductFormValues>({
     resolver: zodResolver(productSchema),
     defaultValues: {
       name: "",
