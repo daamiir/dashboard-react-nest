@@ -1,5 +1,4 @@
 import Logout from "@/components/Logout";
-import { ModeToggle } from "@/components/ui/mode-toggle";
 import { Link } from "react-router-dom";
 
 const Header = () => {
@@ -10,7 +9,6 @@ const Header = () => {
           <Link to="/">Logo</Link>
         </h2>
         <div className="flex items-center gap-2">
-          <ModeToggle />
           <Logout />
         </div>
       </div>

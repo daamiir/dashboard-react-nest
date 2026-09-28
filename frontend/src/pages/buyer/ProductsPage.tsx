@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -16,15 +16,115 @@ import {
 import { useProducts } from "@/modules/products/hooks/useProducts";
 import { useCategories } from "@/modules/categories/hooks/useCategories";
 import { useDebounce } from "@/hooks/useDebounce";
+import type { Product } from "@/modules/products/types";
 
 const RAM_OPTIONS = [4, 6, 8, 12, 16];
 const STORAGE_OPTIONS = [64, 128, 256, 512, 1024];
-
 const PAGE_SIZE = 8;
+
+const money = (n: number) => `$${n.toLocaleString("en-US")}`;
+
+// White card wrapper
+const Card = ({
+  children,
+  className = "",
+}: {
+  children: ReactNode;
+  className?: string;
+}) => (
+  <section className={`rounded-2xl bg-white ${className}`}>{children}</section>
+);
+
+// Checkbox group for single-select numeric filter
+const FilterGroup = ({
+  title,
+  prefix,
+  options,
+  value,
+  onChange,
+}: {
+  title: string;
+  prefix: string;
+  options: number[];
+  value?: number;
+  onChange: (v?: number) => void;
+}) => (
+  <div>
+    <h3 className="mb-2 text-sm font-semibold">{title}</h3>
+    <div className="space-y-2">
+      {options.map((o) => (
+        <div key={o} className="flex items-center gap-2">
+          <Checkbox
+            id={`${prefix}-${o}`}
+            checked={value === o}
+            onCheckedChange={(c) => onChange(c ? o : undefined)}
+          />
+          <Label htmlFor={`${prefix}-${o}`} className="text-sm font-normal">
+            {o} GB
+          </Label>
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+// Single product card
+const ProductCard = ({
+  product,
+  onOpen,
+}: {
+  product: Product;
+  onOpen: () => void;
+}) => {
+  const variants = product.variants ?? [];
+  const prices = variants.map((v) => v.price);
+  const min = prices.length ? Math.min(...prices) : 0;
+  const max = prices.length ? Math.max(...prices) : 0;
+  const inStock = variants.some((v) => v.stockQuantity > 0);
+  const image = variants[0]?.images[0];
+
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      className="group flex flex-col rounded-2xl bg-white p-3 text-left transition-shadow hover:shadow-md"
+    >
+      <div className="relative aspect-square overflow-hidden rounded-xl">
+        {image && (
+          <img
+            src={image}
+            alt={product.name}
+            className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-105"
+          />
+        )}
+        {!inStock && (
+          <Badge variant="destructive" className="absolute right-2 top-2">
+            Out of Stock
+          </Badge>
+        )}
+      </div>
+
+      <div className="mt-3 flex flex-1 flex-col justify-between gap-2">
+        <div>
+          <p className="text-xs font-semibold uppercase text-muted-foreground">
+            {product.brand}
+          </p>
+          <p className="mt-0.5 line-clamp-2 text-sm font-medium">
+            {product.name}
+          </p>
+        </div>
+        <p className="text-base font-bold">
+          {min === max ? money(min) : `${money(min)} – ${money(max)}`}
+        </p>
+      </div>
+    </button>
+  );
+};
 
 const ProductsPage = () => {
   const navigate = useNavigate();
   const { data: categories = [] } = useCategories();
+
   const [categoryId, setCategoryId] = useState<string | undefined>();
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
@@ -32,14 +132,14 @@ const ProductsPage = () => {
   const [storage, setStorage] = useState<number | undefined>();
   const [page, setPage] = useState(1);
 
-  const debouncedMinPrice = useDebounce(minPrice, 400);
-  const debouncedMaxPrice = useDebounce(maxPrice, 400);
+  const debouncedMin = useDebounce(minPrice, 400);
+  const debouncedMax = useDebounce(maxPrice, 400);
 
   const { data, isLoading, isError } = useProducts(
     {
       categoryId,
-      minPrice: debouncedMinPrice ? Number(debouncedMinPrice) : undefined,
-      maxPrice: debouncedMaxPrice ? Number(debouncedMaxPrice) : undefined,
+      minPrice: debouncedMin ? Number(debouncedMin) : undefined,
+      maxPrice: debouncedMax ? Number(debouncedMax) : undefined,
       ram,
       storage,
       page,
@@ -49,124 +149,119 @@ const ProductsPage = () => {
   );
 
   const products = data?.data ?? [];
+  const total = data?.meta.total ?? 0;
   const totalPages = data?.meta.totalPages ?? 1;
 
-  const selectedCategory = categories.find((c) => c.id === categoryId);
-  const isSmartphoneCategory = selectedCategory?.slug === "smartphone";
+  const isSmartphone =
+    categories.find((c) => c.id === categoryId)?.slug === "smartphone";
 
-  const handleCategoryClick = (next: string) => {
-    setCategoryId((prev) => (prev === next ? undefined : next));
-    setPage(1);
-  };
+  // Update a filter and reset to first page
+  const withReset =
+    <T,>(setter: (v: T) => void) =>
+    (v: T) => {
+      setter(v);
+      setPage(1);
+    };
 
   return (
-    <div className="max-w-7xl mx-auto">
-      {/* Categories Bar */}
-      <div className="flex gap-3 overflow-x-auto pb-4 mb-6 border-b">
-        {categories.map((c) => (
-          <button
-            key={c.id}
-            onClick={() => handleCategoryClick(c.id)}
-            className={`shrink-0 rounded-full border px-4 py-2 text-sm transition-colors ${
-              categoryId === c.id
-                ? "bg-primary text-primary-foreground border-primary"
-                : "hover:bg-muted"
-            }`}
-          >
-            {c.name}
-          </button>
-        ))}
-      </div>
+    <div className="relative">
+      {/* Page background */}
+      <div className="fixed inset-0 -z-10 bg-[#f0f1f2]" />
 
-      <div className="grid grid-cols-1 md:grid-cols-[220px_1fr] gap-6">
-        {/* Filters */}
-        <aside className="space-y-6">
-          <div>
-            <h3 className="text-sm font-semibold mb-2">Price</h3>
-            <div className="flex items-center gap-2">
-              <Input
-                type="number"
-                placeholder="Min"
-                className="h-9"
-                value={minPrice}
-                onChange={(e) => {
-                  setMinPrice(e.target.value);
-                  setPage(1);
-                }}
-              />
-              <span className="text-muted-foreground text-sm">–</span>
-              <Input
-                type="number"
-                placeholder="Max"
-                className="h-9"
-                value={maxPrice}
-                onChange={(e) => {
-                  setMaxPrice(e.target.value);
-                  setPage(1);
-                }}
-              />
+      <div className="grid grid-cols-1 items-start gap-4 md:grid-cols-[260px_minmax(0,1fr)]">
+        {/* ---------- Filters (sticky) ---------- */}
+        <aside className="md:sticky md:top-20">
+          <Card className="space-y-6 p-5">
+            {/* Categories */}
+            <div>
+              <h3 className="mb-2 text-sm font-semibold">Category</h3>
+              <div className="flex flex-wrap gap-2">
+                {categories.map((c) => (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => {
+                      setCategoryId((prev) =>
+                        prev === c.id ? undefined : c.id,
+                      );
+                      setRam(undefined);
+                      setStorage(undefined);
+                      setPage(1);
+                    }}
+                    className={`rounded-full border px-3 py-1.5 text-sm transition-colors ${
+                      categoryId === c.id
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-gray-200 hover:bg-muted"
+                    }`}
+                  >
+                    {c.name}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
 
-          {isSmartphoneCategory && (
-            <>
-              <div>
-                <h3 className="text-sm font-semibold mb-2">RAM</h3>
-                <div className="space-y-2">
-                  {RAM_OPTIONS.map((option) => (
-                    <div key={option} className="flex items-center gap-2">
-                      <Checkbox
-                        id={`ram-${option}`}
-                        checked={ram === option}
-                        onCheckedChange={(checked) => {
-                          setRam(checked ? option : undefined);
-                          setPage(1);
-                        }}
-                      />
-                      <Label
-                        htmlFor={`ram-${option}`}
-                        className="text-sm font-normal"
-                      >
-                        {option} GB
-                      </Label>
-                    </div>
-                  ))}
-                </div>
+            {/* Price */}
+            <div>
+              <h3 className="mb-2 text-sm font-semibold">Price</h3>
+              <div className="flex items-center gap-2">
+                <Input
+                  type="number"
+                  placeholder="Min"
+                  className="h-9"
+                  value={minPrice}
+                  onChange={(e) => withReset(setMinPrice)(e.target.value)}
+                />
+                <span className="text-sm text-muted-foreground">–</span>
+                <Input
+                  type="number"
+                  placeholder="Max"
+                  className="h-9"
+                  value={maxPrice}
+                  onChange={(e) => withReset(setMaxPrice)(e.target.value)}
+                />
               </div>
+            </div>
 
-              <div>
-                <h3 className="text-sm font-semibold mb-2">Storage</h3>
-                <div className="space-y-2">
-                  {STORAGE_OPTIONS.map((option) => (
-                    <div key={option} className="flex items-center gap-2">
-                      <Checkbox
-                        id={`storage-${option}`}
-                        checked={storage === option}
-                        onCheckedChange={(checked) => {
-                          setStorage(checked ? option : undefined);
-                          setPage(1);
-                        }}
-                      />
-                      <Label
-                        htmlFor={`storage-${option}`}
-                        className="text-sm font-normal"
-                      >
-                        {option} GB
-                      </Label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </>
-          )}
+            {/* Smartphone-only filters */}
+            {isSmartphone && (
+              <>
+                <FilterGroup
+                  title="RAM"
+                  prefix="ram"
+                  options={RAM_OPTIONS}
+                  value={ram}
+                  onChange={withReset(setRam)}
+                />
+                <FilterGroup
+                  title="Storage"
+                  prefix="storage"
+                  options={STORAGE_OPTIONS}
+                  value={storage}
+                  onChange={withReset(setStorage)}
+                />
+              </>
+            )}
+          </Card>
         </aside>
 
-        {/* Product Listing */}
-        <div className="grid grid-cols-1 gap-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 content-start">
+        {/* ---------- Listing ---------- */}
+        <div className="flex min-w-0 flex-col gap-4">
+          <div>
+            <h1 className="text-2xl font-bold">
+              {categories.find((c) => c.id === categoryId)?.name ??
+                "All products"}
+            </h1>
+            {!isLoading && !isError && (
+              <p className="mt-1 text-sm text-muted-foreground">
+                Found {total} products
+              </p>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 content-start gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
             {isLoading &&
               Array.from({ length: PAGE_SIZE }).map((_, i) => (
-                <Skeleton key={i} className="aspect-3/4 rounded-lg" />
+                <Skeleton key={i} className="aspect-3/4 rounded-2xl" />
               ))}
 
             {isError && (
@@ -183,64 +278,18 @@ const ProductsPage = () => {
 
             {!isLoading &&
               !isError &&
-              products.map((product) => {
-                const variants = product.variants ?? [];
-                const prices = variants.map((v) => v.price);
-                const min = prices.length ? Math.min(...prices) : 0;
-                const max = prices.length ? Math.max(...prices) : 0;
-                const totalStock = variants.reduce(
-                  (acc, v) => acc + v.stockQuantity,
-                  0,
-                );
-                const displayImage = variants[0]?.images[0];
-
-                const formattedPrice =
-                  min === max
-                    ? `$${min.toLocaleString("en-US")}`
-                    : `$${min.toLocaleString("en-US")} – $${max.toLocaleString("en-US")}`;
-
-                return (
-                  <button
-                    key={product.id}
-                    onClick={() => navigate(`/shop/${product.slug}`)}
-                    className="group rounded-lg border overflow-hidden flex flex-col text-left hover:shadow-md transition-shadow relative bg-card"
-                  >
-                    <div className="aspect-square bg-muted overflow-hidden relative">
-                      {displayImage && (
-                        <img
-                          src={displayImage}
-                          alt={product.name}
-                          className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
-                      )}
-                      {totalStock === 0 && (
-                        <Badge
-                          variant="destructive"
-                          className="absolute top-2 right-2"
-                        >
-                          Out of Stock
-                        </Badge>
-                      )}
-                    </div>
-                    <div className="p-3 space-y-1 flex-1 flex flex-col justify-between">
-                      <div>
-                        <p className="text-xs text-muted-foreground uppercase font-semibold">
-                          {product.brand}
-                        </p>
-                        <p className="text-sm font-medium line-clamp-2 mt-0.5">
-                          {product.name}
-                        </p>
-                      </div>
-                      <p className="text-sm font-bold pt-2">{formattedPrice}</p>
-                    </div>
-                  </button>
-                );
-              })}
+              products.map((p) => (
+                <ProductCard
+                  key={p.id}
+                  product={p}
+                  onOpen={() => navigate(`/shop/${p.slug}`)}
+                />
+              ))}
           </div>
 
           {/* Pagination */}
           {!isLoading && !isError && totalPages > 1 && (
-            <Pagination className="mt-8 flex justify-center items-center">
+            <Pagination className="mt-4">
               <PaginationContent>
                 <PaginationItem>
                   <PaginationPrevious
@@ -252,17 +301,17 @@ const ProductsPage = () => {
                   />
                 </PaginationItem>
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                  (pageNumber) => (
-                    <PaginationItem key={pageNumber}>
+                  (n) => (
+                    <PaginationItem key={n}>
                       <PaginationLink
                         href="#"
-                        isActive={pageNumber === page}
+                        isActive={n === page}
                         onClick={(e) => {
                           e.preventDefault();
-                          setPage(pageNumber);
+                          setPage(n);
                         }}
                       >
-                        {pageNumber}
+                        {n}
                       </PaginationLink>
                     </PaginationItem>
                   ),
