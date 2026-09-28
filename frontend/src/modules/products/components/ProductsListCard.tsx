@@ -5,18 +5,14 @@ import {
   ChevronLeft,
   ChevronRight,
   Download,
-  MoreHorizontal,
-  Pencil,
   Plus,
   Search,
   SlidersHorizontal,
-  Trash2,
 } from "lucide-react";
 
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Table,
@@ -26,80 +22,17 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/utils/cn";
-
-import {
-  useDeleteProduct,
-  useMyProducts,
-  useProducts,
-} from "../hooks/useProducts";
-import type { Product, SortBy, SortOrder } from "../types";
 import { useDebounce } from "@/hooks/useDebounce";
-import { useAuthStore } from "@/modules/auth/store/useAuthStore";
-import { useCategories } from "@/modules/categories/hooks/useCategories";
+
+import { useMyProducts, useProducts } from "../hooks/useProducts";
+import type { SortBy, SortOrder } from "../types";
+import { ProductRow } from "./ProductRow";
+import { ProductMobileCard } from "./ProductMobileCard";
 
 const PAGE_SIZE = 7;
-
-const AVATAR_PALETTE = [
-  "bg-slate-900",
-  "bg-blue-600",
-  "bg-purple-600",
-  "bg-orange-500",
-  "bg-emerald-600",
-  "bg-rose-600",
-  "bg-cyan-600",
-  "bg-amber-600",
-];
-
-const getAvatarColor = (key: string) => {
-  let hash = 0;
-  for (let i = 0; i < key.length; i++) {
-    hash = key.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  return AVATAR_PALETTE[Math.abs(hash) % AVATAR_PALETTE.length];
-};
-
-const formatPrice = (price: number) => `$${price.toLocaleString("en-US")}`;
-
-// Range across variant prices, or a single value when they're all equal
-const formatPriceRange = (product: Product) => {
-  const prices = product.variants.map((v) => v.price);
-  const min = Math.min(...prices);
-  const max = Math.max(...prices);
-  return min === max
-    ? formatPrice(min)
-    : `${formatPrice(min)} – ${formatPrice(max)}`;
-};
-
-// Total stock summed across all variants
-const totalStock = (product: Product) =>
-  product.variants.reduce((sum, v) => sum + v.stockQuantity, 0);
-
-const formatDate = (iso: string) => {
-  const date = new Date(iso);
-  const day = date.getDate().toString().padStart(2, "0");
-  const month = date.toLocaleString("en-US", { month: "short" });
-  return `${day} ${month}, ${date.getFullYear()}`;
-};
+const LIMIT_OPTIONS = [5, 10, 20];
 
 const SORTABLE_COLUMNS: { field: SortBy; label: string }[] = [
   { field: "name", label: "Products" },
@@ -116,46 +49,32 @@ export const ProductsListCard = () => {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [viewMode, setViewMode] = useState<"all" | "my-products">("all");
-  const allProducts = useProducts(
-    {
-      search: debouncedSearch,
-      sortBy,
-      sortOrder,
-      page,
-      limit,
-    },
-    viewMode === "all",
-  );
-  const myProducts = useMyProducts(
-    {
-      search: debouncedSearch,
-      sortBy,
-      sortOrder,
-      page,
-      limit,
-    },
-    viewMode === "my-products",
-  );
-  const response = viewMode === "all" ? allProducts.data : myProducts.data;
-  const isLoading =
-    viewMode === "all" ? allProducts.isLoading : myProducts.isLoading;
-  const isError = viewMode === "all" ? allProducts.isError : myProducts.isError;
-
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  const query = { search: debouncedSearch, sortBy, sortOrder, page, limit };
+  const allProducts = useProducts(query, viewMode === "all");
+  const myProducts = useMyProducts(query, viewMode === "my-products");
+
+  // Active query result for the current view
+  const {
+    data: response,
+    isLoading,
+    isError,
+  } = viewMode === "all" ? allProducts : myProducts;
 
   const pageProducts = response?.data ?? [];
   const totalPages = response?.meta.totalPages ?? 1;
   const totalProducts = response?.meta.total ?? 0;
 
   const allOnPageSelected =
-    totalProducts > 0 &&
-    pageProducts.every((product) => selectedIds.has(product.id));
+    pageProducts.length > 0 && pageProducts.every((p) => selectedIds.has(p.id));
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value);
     setPage(1);
   };
 
+  // Toggle order on same column, reset to asc on a new one
   const handleSort = (field: SortBy) => {
     if (sortBy === field) {
       setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
@@ -163,6 +82,11 @@ export const ProductsListCard = () => {
       setSortBy(field);
       setSortOrder("asc");
     }
+    setPage(1);
+  };
+
+  const handleLimit = (value: number) => {
+    setLimit(value);
     setPage(1);
   };
 
@@ -178,16 +102,14 @@ export const ProductsListCard = () => {
   const toggleAllOnPage = () => {
     setSelectedIds((prev) => {
       const next = new Set(prev);
-      if (allOnPageSelected) {
-        pageProducts.forEach((product) => next.delete(product.id));
-      } else {
-        pageProducts.forEach((product) => next.add(product.id));
-      }
+      pageProducts.forEach((p) =>
+        allOnPageSelected ? next.delete(p.id) : next.add(p.id),
+      );
       return next;
     });
   };
 
-  const handleViewModeToggle = () => {
+  const toggleViewMode = () => {
     setViewMode((prev) => (prev === "all" ? "my-products" : "all"));
     setPage(1);
   };
@@ -219,42 +141,32 @@ export const ProductsListCard = () => {
       </CardHeader>
 
       <CardContent className="mt-4 flex flex-col gap-4 p-0">
+        {/* Toolbar */}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="relative w-full sm:max-w-xs">
             <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               value={search}
-              onChange={handleChange}
+              onChange={handleSearch}
               placeholder="Search..."
               className="pl-8"
             />
           </div>
           <div className="flex items-center gap-4">
             <div className="flex gap-2">
-              <Button
-                variant="outline"
-                className="w-full sm:w-auto"
-                onClick={() => setLimit(5)}
-              >
-                5
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full sm:w-auto"
-                onClick={() => setLimit(10)}
-              >
-                10
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full sm:w-auto"
-                onClick={() => setLimit(20)}
-              >
-                20
-              </Button>
+              {LIMIT_OPTIONS.map((n) => (
+                <Button
+                  key={n}
+                  variant={limit === n ? "default" : "outline"}
+                  className="w-full sm:w-auto"
+                  onClick={() => handleLimit(n)}
+                >
+                  {n}
+                </Button>
+              ))}
               <Button
                 variant={viewMode === "all" ? "outline" : "default"}
-                onClick={handleViewModeToggle}
+                onClick={toggleViewMode}
               >
                 My Products
               </Button>
@@ -266,7 +178,7 @@ export const ProductsListCard = () => {
           </div>
         </div>
 
-        {/* Mobile version*/}
+        {/* Mobile list */}
         <div className="flex flex-col gap-2 md:hidden">
           {pageProducts.map((product) => (
             <ProductMobileCard
@@ -276,14 +188,14 @@ export const ProductsListCard = () => {
               onToggle={() => toggleRow(product.id)}
             />
           ))}
-          {totalProducts === 0 && (
+          {!isLoading && !isError && totalProducts === 0 && (
             <p className="py-10 text-center text-sm text-muted-foreground">
               No products match your search.
             </p>
           )}
         </div>
 
-        {/* Tablet & up versions */}
+        {/* Table (tablet and up) */}
         <div className="hidden md:block">
           <Table>
             <TableHeader>
@@ -321,17 +233,14 @@ export const ProductsListCard = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {isLoading && (
-                <>
-                  {Array.from({ length: PAGE_SIZE }).map((_, i) => (
-                    <TableRow key={i}>
-                      <TableCell colSpan={8}>
-                        <Skeleton className="h-8 w-full" />
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </>
-              )}
+              {isLoading &&
+                Array.from({ length: PAGE_SIZE }).map((_, i) => (
+                  <TableRow key={i}>
+                    <TableCell colSpan={8}>
+                      <Skeleton className="h-8 w-full" />
+                    </TableCell>
+                  </TableRow>
+                ))}
 
               {isError && (
                 <TableRow>
@@ -369,6 +278,7 @@ export const ProductsListCard = () => {
           </Table>
         </div>
 
+        {/* Footer: range and pagination */}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm text-muted-foreground">
             Showing {totalProducts === 0 ? 0 : (page - 1) * limit + 1} to{" "}
@@ -385,18 +295,16 @@ export const ProductsListCard = () => {
             </Button>
 
             <div className="hidden items-center gap-1.5 sm:flex">
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                (pageNumber) => (
-                  <Button
-                    key={pageNumber}
-                    variant={pageNumber === page ? "default" : "outline"}
-                    size="icon"
-                    onClick={() => setPage(pageNumber)}
-                  >
-                    {pageNumber}
-                  </Button>
-                ),
-              )}
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
+                <Button
+                  key={n}
+                  variant={n === page ? "default" : "outline"}
+                  size="icon"
+                  onClick={() => setPage(n)}
+                >
+                  {n}
+                </Button>
+              ))}
             </div>
             <span className="px-2 text-sm font-medium sm:hidden">
               Page {page} of {totalPages}
@@ -414,175 +322,5 @@ export const ProductsListCard = () => {
         </div>
       </CardContent>
     </Card>
-  );
-};
-
-const ProductActionsMenu = ({ product }: { product: Product }) => {
-  const navigate = useNavigate();
-  const deleteProduct = useDeleteProduct();
-
-  return (
-    <AlertDialog>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            aria-label={`Actions for ${product.name}`}
-          >
-            <MoreHorizontal />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent>
-          <DropdownMenuItem
-            onClick={() => navigate(`/admin/products/edit/${product.id}`)}
-          >
-            <Pencil />
-            Edit
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <AlertDialogTrigger asChild>
-            <DropdownMenuItem
-              variant="destructive"
-              onSelect={(e) => e.preventDefault()}
-            >
-              <Trash2 />
-              Delete
-            </DropdownMenuItem>
-          </AlertDialogTrigger>
-        </DropdownMenuContent>
-      </DropdownMenu>
-
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Delete "{product.name}"?</AlertDialogTitle>
-          <AlertDialogDescription>
-            This action can't be undone. This will permanently remove the
-            product from your inventory.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={() => deleteProduct.mutate(product.id)}>
-            Delete
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
-  );
-};
-
-const ProductRow = ({
-  product,
-  selected,
-  onToggle,
-}: {
-  product: Product;
-  selected: boolean;
-  onToggle: () => void;
-}) => {
-  const userId = useAuthStore((state) => state.user?.id);
-  const { data: categories = [] } = useCategories();
-  const categoryName =
-    categories.find((c) => c.id === product.categoryId)?.name ?? "—";
-  const stock = totalStock(product);
-
-  return (
-    <TableRow data-state={selected ? "selected" : undefined}>
-      <TableCell>
-        <Checkbox
-          checked={selected}
-          onCheckedChange={onToggle}
-          aria-label={`Select ${product.name}`}
-        />
-      </TableCell>
-      <TableCell className="font-medium">
-        <div className="flex items-center gap-3">
-          <div
-            className={cn(
-              "flex size-10 shrink-0 items-center justify-center rounded-lg text-sm font-semibold text-white",
-              getAvatarColor(product.brand),
-            )}
-          >
-            {product.name.charAt(0)}
-          </div>
-          {product.name}
-        </div>
-      </TableCell>
-      <TableCell className="text-muted-foreground">{product.brand}</TableCell>
-      <TableCell>{formatPriceRange(product)}</TableCell>
-      <TableCell className="text-muted-foreground">{categoryName}</TableCell>
-      <TableCell>
-        <Badge variant={stock > 0 ? "success" : "destructive"}>
-          {stock > 0 ? "In Stock" : "Out of Stock"}
-        </Badge>
-      </TableCell>
-      <TableCell className="hidden text-muted-foreground lg:table-cell">
-        {formatDate(product.createdAt)}
-      </TableCell>
-      <TableCell>
-        {userId === product.createdById && (
-          <ProductActionsMenu product={product} />
-        )}
-      </TableCell>
-    </TableRow>
-  );
-};
-
-const ProductMobileCard = ({
-  product,
-  selected,
-  onToggle,
-}: {
-  product: Product;
-  selected: boolean;
-  onToggle: () => void;
-}) => {
-  const userId = useAuthStore((state) => state.user?.id);
-  const { data: categories = [] } = useCategories();
-  const categoryName =
-    categories.find((c) => c.id === product.categoryId)?.name ?? "—";
-  const stock = totalStock(product);
-
-  return (
-    <div
-      data-state={selected ? "selected" : undefined}
-      className="flex items-start gap-3 rounded-xl p-3 data-[state=selected]:bg-muted dark:border-gray-800"
-    >
-      <Checkbox
-        checked={selected}
-        onCheckedChange={onToggle}
-        aria-label={`Select ${product.name}`}
-        className="mt-1"
-      />
-      <div
-        className={cn(
-          "flex size-10 shrink-0 items-center justify-center rounded-lg text-sm font-semibold text-white",
-          getAvatarColor(product.brand),
-        )}
-      >
-        {product.name.charAt(0)}
-      </div>
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium">{product.name}</p>
-        <p className="truncate text-xs text-muted-foreground">
-          {categoryName} · {product.brand}
-        </p>
-        <div className="mt-1.5 flex flex-wrap items-center gap-2">
-          <span className="text-sm font-medium">
-            {formatPriceRange(product)}
-          </span>
-          <Badge variant={stock > 0 ? "success" : "destructive"}>
-            {stock > 0 ? "In Stock" : "Out of Stock"}
-          </Badge>
-        </div>
-        <p className="mt-1 text-xs text-muted-foreground">
-          {formatDate(product.createdAt)}
-        </p>
-      </div>
-      {userId === product.createdById && (
-        <ProductActionsMenu product={product} />
-      )}
-    </div>
   );
 };

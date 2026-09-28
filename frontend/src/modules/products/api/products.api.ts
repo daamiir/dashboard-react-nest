@@ -1,36 +1,13 @@
-import { useAuthStore } from "@/modules/auth/store/useAuthStore";
 import type {
   PaginatedResponse,
-  PaginationMeta,
   Product,
   ProductQueryParams,
   ProductVariant,
 } from "../types";
 import type { VariantFormValues } from "../schema";
+import { handleResponse, authHeaders, jsonAuthHeaders } from "@/lib/api-client";
 
 const BASE_URL = `${import.meta.env.VITE_API_URL}/products`;
-
-interface ApiEnvelope<T> {
-  success: boolean;
-  timestamp: string;
-  data: T;
-  meta?: PaginationMeta;
-}
-
-async function handleResponse<T>(res: Response): Promise<ApiEnvelope<T>> {
-  if (!res.ok) {
-    const body = await res.json().catch(() => null);
-    throw new Error(
-      body?.message ?? `Request failed with status ${res.status}`,
-    );
-  }
-  return res.json();
-}
-
-function authHeaders(): HeadersInit {
-  const token = useAuthStore.getState().token;
-  return { Authorization: `Bearer ${token}` };
-}
 
 export type CreateProductPayload = Omit<
   Product,
@@ -96,7 +73,7 @@ export const productsApi = {
   create: async (payload: CreateProductPayload): Promise<Product> => {
     const res = await fetch(BASE_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json", ...authHeaders() },
+      headers: jsonAuthHeaders(),
       body: JSON.stringify(payload),
     });
     const envelope = await handleResponse<Product>(res);
@@ -109,7 +86,7 @@ export const productsApi = {
   ): Promise<Product> => {
     const res = await fetch(`${BASE_URL}/${id}`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json", ...authHeaders() },
+      headers: jsonAuthHeaders(),
       body: JSON.stringify(payload),
     });
     const envelope = await handleResponse<Product>(res);
@@ -131,7 +108,7 @@ export const productsApi = {
   ): Promise<ProductVariant> => {
     const res = await fetch(`${BASE_URL}/${productId}/variants`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", ...authHeaders() },
+      headers: jsonAuthHeaders(),
       body: JSON.stringify(payload),
     });
     const envelope = await handleResponse<ProductVariant>(res);
@@ -145,7 +122,7 @@ export const productsApi = {
   ): Promise<ProductVariant> => {
     const res = await fetch(`${BASE_URL}/${productId}/variants/${variantId}`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json", ...authHeaders() },
+      headers: jsonAuthHeaders(),
       body: JSON.stringify(payload),
     });
     const envelope = await handleResponse<ProductVariant>(res);

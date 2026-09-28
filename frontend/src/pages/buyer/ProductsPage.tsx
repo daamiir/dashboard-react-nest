@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -13,29 +13,19 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import { SurfaceCard } from "@/components/shared/SurfaceCard";
 import { useProducts } from "@/modules/products/hooks/useProducts";
 import { useCategories } from "@/modules/categories/hooks/useCategories";
+import { formatPriceRange } from "@/modules/products/utils";
 import { useDebounce } from "@/hooks/useDebounce";
+import { cn } from "@/utils/cn";
 import type { Product } from "@/modules/products/types";
 
 const RAM_OPTIONS = [4, 6, 8, 12, 16];
 const STORAGE_OPTIONS = [64, 128, 256, 512, 1024];
 const PAGE_SIZE = 8;
 
-const money = (n: number) => `$${n.toLocaleString("en-US")}`;
-
-// White card wrapper
-const Card = ({
-  children,
-  className = "",
-}: {
-  children: ReactNode;
-  className?: string;
-}) => (
-  <section className={`rounded-2xl bg-white ${className}`}>{children}</section>
-);
-
-// Checkbox group for single-select numeric filter
+// Single-select checkbox group for numeric filters
 const FilterGroup = ({
   title,
   prefix,
@@ -57,7 +47,7 @@ const FilterGroup = ({
           <Checkbox
             id={`${prefix}-${o}`}
             checked={value === o}
-            onCheckedChange={(c) => onChange(c ? o : undefined)}
+            onCheckedChange={(checked) => onChange(checked ? o : undefined)}
           />
           <Label htmlFor={`${prefix}-${o}`} className="text-sm font-normal">
             {o} GB
@@ -68,7 +58,7 @@ const FilterGroup = ({
   </div>
 );
 
-// Single product card
+// Product tile in the listing grid
 const ProductCard = ({
   product,
   onOpen,
@@ -77,9 +67,6 @@ const ProductCard = ({
   onOpen: () => void;
 }) => {
   const variants = product.variants ?? [];
-  const prices = variants.map((v) => v.price);
-  const min = prices.length ? Math.min(...prices) : 0;
-  const max = prices.length ? Math.max(...prices) : 0;
   const inStock = variants.some((v) => v.stockQuantity > 0);
   const image = variants[0]?.images[0];
 
@@ -113,9 +100,7 @@ const ProductCard = ({
             {product.name}
           </p>
         </div>
-        <p className="text-base font-bold">
-          {min === max ? money(min) : `${money(min)} – ${money(max)}`}
-        </p>
+        <p className="text-base font-bold">{formatPriceRange(product)}</p>
       </div>
     </button>
   );
@@ -152,8 +137,8 @@ const ProductsPage = () => {
   const total = data?.meta.total ?? 0;
   const totalPages = data?.meta.totalPages ?? 1;
 
-  const isSmartphone =
-    categories.find((c) => c.id === categoryId)?.slug === "smartphone";
+  const selectedCategory = categories.find((c) => c.id === categoryId);
+  const isSmartphone = selectedCategory?.slug === "smartphone";
 
   // Update a filter and reset to first page
   const withReset =
@@ -163,172 +148,166 @@ const ProductsPage = () => {
       setPage(1);
     };
 
+  // Toggle category and clear category-specific filters
+  const handleCategoryClick = (id: string) => {
+    setCategoryId((prev) => (prev === id ? undefined : id));
+    setRam(undefined);
+    setStorage(undefined);
+    setPage(1);
+  };
+
   return (
-    <div className="relative">
-      {/* Page background */}
-      <div className="fixed inset-0 -z-10 bg-[#f0f1f2]" />
-
-      <div className="grid grid-cols-1 items-start gap-4 md:grid-cols-[260px_minmax(0,1fr)]">
-        {/* ---------- Filters (sticky) ---------- */}
-        <aside className="md:sticky md:top-20">
-          <Card className="space-y-6 p-5">
-            {/* Categories */}
-            <div>
-              <h3 className="mb-2 text-sm font-semibold">Category</h3>
-              <div className="flex flex-wrap gap-2">
-                {categories.map((c) => (
-                  <button
-                    key={c.id}
-                    type="button"
-                    onClick={() => {
-                      setCategoryId((prev) =>
-                        prev === c.id ? undefined : c.id,
-                      );
-                      setRam(undefined);
-                      setStorage(undefined);
-                      setPage(1);
-                    }}
-                    className={`rounded-full border px-3 py-1.5 text-sm transition-colors ${
-                      categoryId === c.id
-                        ? "border-primary bg-primary text-primary-foreground"
-                        : "border-gray-200 hover:bg-muted"
-                    }`}
-                  >
-                    {c.name}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Price */}
-            <div>
-              <h3 className="mb-2 text-sm font-semibold">Price</h3>
-              <div className="flex items-center gap-2">
-                <Input
-                  type="number"
-                  placeholder="Min"
-                  className="h-9"
-                  value={minPrice}
-                  onChange={(e) => withReset(setMinPrice)(e.target.value)}
-                />
-                <span className="text-sm text-muted-foreground">–</span>
-                <Input
-                  type="number"
-                  placeholder="Max"
-                  className="h-9"
-                  value={maxPrice}
-                  onChange={(e) => withReset(setMaxPrice)(e.target.value)}
-                />
-              </div>
-            </div>
-
-            {/* Smartphone-only filters */}
-            {isSmartphone && (
-              <>
-                <FilterGroup
-                  title="RAM"
-                  prefix="ram"
-                  options={RAM_OPTIONS}
-                  value={ram}
-                  onChange={withReset(setRam)}
-                />
-                <FilterGroup
-                  title="Storage"
-                  prefix="storage"
-                  options={STORAGE_OPTIONS}
-                  value={storage}
-                  onChange={withReset(setStorage)}
-                />
-              </>
-            )}
-          </Card>
-        </aside>
-
-        {/* ---------- Listing ---------- */}
-        <div className="flex min-w-0 flex-col gap-4">
+    <div className="grid grid-cols-1 items-start gap-4 md:grid-cols-[260px_minmax(0,1fr)]">
+      {/* ---------- Filters (sticky) ---------- */}
+      <aside className="md:sticky md:top-20">
+        <SurfaceCard className="space-y-6 p-5">
+          {/* Categories */}
           <div>
-            <h1 className="text-2xl font-bold">
-              {categories.find((c) => c.id === categoryId)?.name ??
-                "All products"}
-            </h1>
-            {!isLoading && !isError && (
-              <p className="mt-1 text-sm text-muted-foreground">
-                Found {total} products
-              </p>
-            )}
+            <h3 className="mb-2 text-sm font-semibold">Category</h3>
+            <div className="flex flex-wrap gap-2">
+              {categories.map((c) => (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => handleCategoryClick(c.id)}
+                  className={cn(
+                    "rounded-full border px-3 py-1.5 text-sm transition-colors",
+                    categoryId === c.id
+                      ? "border-primary bg-primary text-primary-foreground"
+                      : "border-gray-200 hover:bg-muted",
+                  )}
+                >
+                  {c.name}
+                </button>
+              ))}
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 content-start gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-            {isLoading &&
-              Array.from({ length: PAGE_SIZE }).map((_, i) => (
-                <Skeleton key={i} className="aspect-3/4 rounded-2xl" />
-              ))}
-
-            {isError && (
-              <p className="col-span-full py-10 text-center text-sm text-destructive">
-                Couldn't load products. Is the backend running?
-              </p>
-            )}
-
-            {!isLoading && !isError && products.length === 0 && (
-              <p className="col-span-full py-10 text-center text-sm text-muted-foreground">
-                No products match your filters.
-              </p>
-            )}
-
-            {!isLoading &&
-              !isError &&
-              products.map((p) => (
-                <ProductCard
-                  key={p.id}
-                  product={p}
-                  onOpen={() => navigate(`/shop/${p.slug}`)}
-                />
-              ))}
+          {/* Price */}
+          <div>
+            <h3 className="mb-2 text-sm font-semibold">Price</h3>
+            <div className="flex items-center gap-2">
+              <Input
+                type="number"
+                placeholder="Min"
+                className="h-9"
+                value={minPrice}
+                onChange={(e) => withReset(setMinPrice)(e.target.value)}
+              />
+              <span className="text-sm text-muted-foreground">–</span>
+              <Input
+                type="number"
+                placeholder="Max"
+                className="h-9"
+                value={maxPrice}
+                onChange={(e) => withReset(setMaxPrice)(e.target.value)}
+              />
+            </div>
           </div>
 
-          {/* Pagination */}
-          {!isLoading && !isError && totalPages > 1 && (
-            <Pagination className="mt-4">
-              <PaginationContent>
-                <PaginationItem>
-                  <PaginationPrevious
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setPage((p) => Math.max(1, p - 1));
-                    }}
-                  />
-                </PaginationItem>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                  (n) => (
-                    <PaginationItem key={n}>
-                      <PaginationLink
-                        href="#"
-                        isActive={n === page}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          setPage(n);
-                        }}
-                      >
-                        {n}
-                      </PaginationLink>
-                    </PaginationItem>
-                  ),
-                )}
-                <PaginationItem>
-                  <PaginationNext
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setPage((p) => Math.min(totalPages, p + 1));
-                    }}
-                  />
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
+          {/* Smartphone-only filters */}
+          {isSmartphone && (
+            <>
+              <FilterGroup
+                title="RAM"
+                prefix="ram"
+                options={RAM_OPTIONS}
+                value={ram}
+                onChange={withReset(setRam)}
+              />
+              <FilterGroup
+                title="Storage"
+                prefix="storage"
+                options={STORAGE_OPTIONS}
+                value={storage}
+                onChange={withReset(setStorage)}
+              />
+            </>
+          )}
+        </SurfaceCard>
+      </aside>
+
+      {/* ---------- Listing ---------- */}
+      <div className="flex min-w-0 flex-col gap-4">
+        <div>
+          <h1 className="text-2xl font-bold">
+            {selectedCategory?.name ?? "All products"}
+          </h1>
+          {!isLoading && !isError && (
+            <p className="mt-1 text-sm text-muted-foreground">
+              Found {total} products
+            </p>
           )}
         </div>
+
+        <div className="grid grid-cols-1 content-start gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+          {isLoading &&
+            Array.from({ length: PAGE_SIZE }).map((_, i) => (
+              <Skeleton key={i} className="aspect-3/4 rounded-2xl" />
+            ))}
+
+          {isError && (
+            <p className="col-span-full py-10 text-center text-sm text-destructive">
+              Couldn't load products. Is the backend running?
+            </p>
+          )}
+
+          {!isLoading && !isError && products.length === 0 && (
+            <p className="col-span-full py-10 text-center text-sm text-muted-foreground">
+              No products match your filters.
+            </p>
+          )}
+
+          {!isLoading &&
+            !isError &&
+            products.map((p) => (
+              <ProductCard
+                key={p.id}
+                product={p}
+                onOpen={() => navigate(`/shop/${p.slug}`)}
+              />
+            ))}
+        </div>
+
+        {/* Pagination */}
+        {!isLoading && !isError && totalPages > 1 && (
+          <Pagination className="mt-4">
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setPage((p) => Math.max(1, p - 1));
+                  }}
+                />
+              </PaginationItem>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
+                <PaginationItem key={n}>
+                  <PaginationLink
+                    href="#"
+                    isActive={n === page}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setPage(n);
+                    }}
+                  >
+                    {n}
+                  </PaginationLink>
+                </PaginationItem>
+              ))}
+              <PaginationItem>
+                <PaginationNext
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setPage((p) => Math.min(totalPages, p + 1));
+                  }}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        )}
       </div>
     </div>
   );
