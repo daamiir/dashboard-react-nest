@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -12,7 +12,50 @@ const ProductDetailsPage = () => {
   const navigate = useNavigate();
   const { data: product, isLoading, isError } = useProductBySlug(slug);
   const { data: categories = [] } = useCategories();
-  const [variantIndex, setVariantIndex] = useState(0);
+
+  // Active selections for dynamic variant picker
+  const [selectedColor, setSelectedColor] = useState<string | null>(null);
+  const [selectedStorage, setSelectedStorage] = useState<string | null>(null);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+
+  // Extract unique colors and storage options from product variants
+  const colors = useMemo(() => {
+    if (!product?.variants) return [];
+    return Array.from(
+      new Set(
+        product.variants
+          .map((v) => v.attributes.color as string)
+          .filter(Boolean),
+      ),
+    );
+  }, [product]);
+
+  const storages = useMemo(() => {
+    if (!product?.variants) return [];
+    return Array.from(
+      new Set(
+        product.variants
+          .map((v) =>
+            v.attributes.storage ? String(v.attributes.storage) : null,
+          )
+          .filter(Boolean),
+      ),
+    );
+  }, [product]);
+
+  // Dynamically resolve active variant based on pickers or default to first
+  const activeVariant = useMemo(() => {
+    if (!product?.variants?.length) return null;
+
+    const matched = product.variants.find((v) => {
+      const matchColor = !selectedColor || v.attributes.color === selectedColor;
+      const matchStorage =
+        !selectedStorage || String(v.attributes.storage) === selectedStorage;
+      return matchColor && matchStorage;
+    });
+
+    return matched ?? product.variants[0];
+  }, [product, selectedColor, selectedStorage]);
 
   if (isLoading) {
     return (
@@ -27,7 +70,7 @@ const ProductDetailsPage = () => {
     );
   }
 
-  if (isError || !product) {
+  if (isError || !product || !activeVariant) {
     return (
       <div className="max-w-5xl mx-auto py-16 text-center">
         <p className="text-sm text-muted-foreground">
@@ -47,84 +90,130 @@ const ProductDetailsPage = () => {
   const category = categories.find((c) => c.id === product.categoryId);
   const specFields = category ? (CATEGORY_SPECS[category.slug] ?? []) : [];
   const attributes = product.attributes ?? {};
-  const variant = product.variants[variantIndex] ?? product.variants[0];
+  const images =
+    activeVariant.images.length > 0
+      ? activeVariant.images
+      : ["/placeholder.jpg"];
+  const currentImage = images[activeImageIndex] ?? images[0];
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className="max-w-5xl mx-auto py-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* Images */}
+        {/* Gallery */}
         <div className="space-y-3">
-          <div className="aspect-square rounded-lg overflow-hidden bg-muted">
-            {variant.images[0] && (
-              <img
-                src={variant.images[0]}
-                alt={product.name}
-                className="h-full w-full object-cover"
-              />
-            )}
+          <div className="aspect-square rounded-lg overflow-hidden bg-muted border">
+            <img
+              src={currentImage}
+              alt={product.name}
+              className="h-full w-full object-contain p-2"
+            />
           </div>
-          {variant.images.length > 1 && (
-            <div className="grid grid-cols-4 gap-2">
-              {variant.images.slice(1, 5).map((src, i) => (
-                <div
+          {images.length > 1 && (
+            <div className="grid grid-cols-5 gap-2">
+              {images.map((src, i) => (
+                <button
                   key={i}
-                  className="aspect-square rounded-md overflow-hidden bg-muted"
+                  onClick={() => setActiveImageIndex(i)}
+                  className={`aspect-square rounded-md overflow-hidden bg-muted border-2 transition-all ${
+                    activeImageIndex === i
+                      ? "border-primary"
+                      : "border-transparent"
+                  }`}
                 >
                   <img
                     src={src}
-                    alt={`${product.name} ${i + 2}`}
+                    alt={`${product.name} ${i + 1}`}
                     className="h-full w-full object-cover"
                   />
-                </div>
+                </button>
               ))}
             </div>
           )}
         </div>
 
-        {/* Info */}
+        {/* Product Details */}
         <div className="space-y-6">
           <div>
-            <p className="text-sm text-muted-foreground">{product.brand}</p>
-            <h1 className="text-2xl font-semibold mt-1">{product.name}</h1>
+            <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
+              {product.brand}
+            </p>
+            <h1 className="text-2xl font-bold mt-1">{product.name}</h1>
             <div className="mt-3 flex items-center gap-3">
-              <span className="text-2xl font-semibold">
-                ${variant.price.toLocaleString("en-US")}
+              <span className="text-3xl font-extrabold">
+                ${activeVariant.price.toLocaleString("en-US")}
               </span>
               <Badge
-                variant={variant.stockQuantity > 0 ? "success" : "destructive"}
+                variant={
+                  activeVariant.stockQuantity > 0 ? "default" : "destructive"
+                }
               >
-                {variant.stockQuantity > 0 ? "In Stock" : "Out of Stock"}
+                {activeVariant.stockQuantity > 0 ? "In Stock" : "Out of Stock"}
               </Badge>
             </div>
           </div>
 
-          {product.variants.length > 1 && (
-            <div>
-              <h2 className="text-sm font-semibold mb-2">Variant</h2>
+          {/* Color Selector */}
+          {colors.length > 0 && (
+            <div className="space-y-2">
+              <label className="text-xs font-semibold uppercase text-muted-foreground">
+                Color
+              </label>
               <div className="flex flex-wrap gap-2">
-                {product.variants.map((v, i) => (
-                  <button
-                    key={v.id}
-                    onClick={() => setVariantIndex(i)}
-                    className={`rounded-md border px-3 py-1.5 text-sm transition-colors ${
-                      i === variantIndex
-                        ? "bg-primary text-primary-foreground border-primary"
-                        : "hover:bg-muted"
-                    }`}
-                  >
-                    {v.sku}
-                  </button>
-                ))}
+                {colors.map((color) => {
+                  const isSelected =
+                    selectedColor === color ||
+                    (!selectedColor &&
+                      activeVariant.attributes.color === color);
+                  return (
+                    <Button
+                      key={color}
+                      type="button"
+                      variant={isSelected ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setSelectedColor(color)}
+                    >
+                      {color}
+                    </Button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Storage Selector */}
+          {storages.length > 0 && (
+            <div className="space-y-2">
+              <label className="text-xs font-semibold uppercase text-muted-foreground">
+                Storage
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {storages.map((storage) => {
+                  const isSelected =
+                    selectedStorage === storage ||
+                    (!selectedStorage &&
+                      String(activeVariant.attributes.storage) === storage);
+                  return (
+                    <Button
+                      key={storage}
+                      type="button"
+                      variant={isSelected ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setSelectedStorage(storage)}
+                    >
+                      {storage} GB
+                    </Button>
+                  );
+                })}
               </div>
             </div>
           )}
 
           <Button
             size="lg"
-            className="w-full sm:w-auto"
-            disabled={variant.stockQuantity === 0}
+            className="w-full sm:w-auto px-8"
+            disabled={activeVariant.stockQuantity === 0}
           >
-            Add to Cart
+            {activeVariant.stockQuantity > 0 ? "Add to Cart" : "Out of Stock"}
           </Button>
 
           <div>
@@ -137,7 +226,7 @@ const ProductDetailsPage = () => {
           {specFields.length > 0 && (
             <div>
               <h2 className="text-sm font-semibold mb-3">Specifications</h2>
-              <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
+              <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm border-t pt-2">
                 {specFields
                   .filter((field) => attributes[field.key] !== undefined)
                   .map((field) => {

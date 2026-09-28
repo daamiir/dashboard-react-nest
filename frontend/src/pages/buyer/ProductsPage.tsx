@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
 import {
   Pagination,
   PaginationContent,
@@ -16,7 +17,6 @@ import { useProducts } from "@/modules/products/hooks/useProducts";
 import { useCategories } from "@/modules/categories/hooks/useCategories";
 import { useDebounce } from "@/hooks/useDebounce";
 
-// smartphone-only for now, so other categories fall back to price-only.
 const RAM_OPTIONS = [4, 6, 8, 12, 16];
 const STORAGE_OPTIONS = [64, 128, 256, 512, 1024];
 
@@ -61,7 +61,7 @@ const ProductsPage = () => {
 
   return (
     <div className="max-w-7xl mx-auto">
-      {/* Categories */}
+      {/* Categories Bar */}
       <div className="flex gap-3 overflow-x-auto pb-4 mb-6 border-b">
         {categories.map((c) => (
           <button
@@ -161,8 +161,8 @@ const ProductsPage = () => {
           )}
         </aside>
 
+        {/* Product Listing */}
         <div className="grid grid-cols-1 gap-6">
-          {/* Products */}
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 content-start">
             {isLoading &&
               Array.from({ length: PAGE_SIZE }).map((_, i) => (
@@ -184,30 +184,54 @@ const ProductsPage = () => {
             {!isLoading &&
               !isError &&
               products.map((product) => {
-                // Storefront card shows the first variant's price/image
-                const variant = product.variants[0];
+                const variants = product.variants ?? [];
+                const prices = variants.map((v) => v.price);
+                const min = prices.length ? Math.min(...prices) : 0;
+                const max = prices.length ? Math.max(...prices) : 0;
+                const totalStock = variants.reduce(
+                  (acc, v) => acc + v.stockQuantity,
+                  0,
+                );
+                const displayImage = variants[0]?.images[0];
+
+                const formattedPrice =
+                  min === max
+                    ? `$${min.toLocaleString("en-US")}`
+                    : `$${min.toLocaleString("en-US")} – $${max.toLocaleString("en-US")}`;
+
                 return (
                   <button
                     key={product.id}
                     onClick={() => navigate(`/shop/${product.slug}`)}
-                    className="rounded-lg border overflow-hidden flex flex-col text-left hover:shadow-md transition-shadow"
+                    className="group rounded-lg border overflow-hidden flex flex-col text-left hover:shadow-md transition-shadow relative bg-card"
                   >
-                    <div className="aspect-square bg-muted overflow-hidden">
-                      {variant?.images[0] && (
+                    <div className="aspect-square bg-muted overflow-hidden relative">
+                      {displayImage && (
                         <img
-                          src={variant.images[0]}
+                          src={displayImage}
                           alt={product.name}
-                          className="h-full w-full object-cover"
+                          className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
                         />
                       )}
+                      {totalStock === 0 && (
+                        <Badge
+                          variant="destructive"
+                          className="absolute top-2 right-2"
+                        >
+                          Out of Stock
+                        </Badge>
+                      )}
                     </div>
-                    <div className="p-3 space-y-1">
-                      <p className="text-sm font-medium line-clamp-1">
-                        {product.name}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        ${variant?.price.toLocaleString("en-US") ?? "—"}
-                      </p>
+                    <div className="p-3 space-y-1 flex-1 flex flex-col justify-between">
+                      <div>
+                        <p className="text-xs text-muted-foreground uppercase font-semibold">
+                          {product.brand}
+                        </p>
+                        <p className="text-sm font-medium line-clamp-2 mt-0.5">
+                          {product.name}
+                        </p>
+                      </div>
+                      <p className="text-sm font-bold pt-2">{formattedPrice}</p>
                     </div>
                   </button>
                 );
