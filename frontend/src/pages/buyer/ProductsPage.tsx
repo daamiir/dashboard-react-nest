@@ -157,7 +157,7 @@ const ProductsPage = () => {
     <div className="grid grid-cols-1 items-start gap-4 md:grid-cols-[260px_minmax(0,1fr)]">
       {/* ---------- Filters (sticky) ---------- */}
       <aside className="md:sticky md:top-20">
-        <SurfaceCard className="space-y-6 p-5">
+        <SurfaceCard className="space-y-6 bg-sidebar p-5">
           {/* Categories */}
           <div>
             <h3 className="mb-2 text-sm font-semibold">Category</h3>

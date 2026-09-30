@@ -9,7 +9,7 @@ export const SurfaceCard = ({
   children: ReactNode;
   className?: string;
 }) => (
-  <section className={cn("rounded-2xl bg-white p-6", className)}>
+  <section className={cn("rounded-2xl bg-card p-6", className)}>
     {children}
   </section>
 );
