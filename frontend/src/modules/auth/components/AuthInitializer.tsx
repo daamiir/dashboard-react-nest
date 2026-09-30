@@ -8,6 +8,7 @@ interface AuthInitializerProps {
 }
 
 export const AuthInitializer = ({ children }: AuthInitializerProps) => {
+  const user = useAuthStore((s) => s.user);
   const token = useAuthStore((s) => s.token);
   const setAuth = useAuthStore((s) => s.setAuth);
   const logout = useAuthStore((s) => s.logout);
@@ -34,7 +35,7 @@ export const AuthInitializer = ({ children }: AuthInitializerProps) => {
     }
   }, [isError, logout]);
 
-  if (token && isFetching) {
+  if (token && !user && isFetching) {
     return (
       <div className="flex min-h-svh items-center justify-center">
         <p className="text-sm text-muted-foreground">Loading…</p>
