@@ -1,3 +1,4 @@
+import { GuestRoute } from "@/components/GuestRoute";
 import AppLayout from "@/components/layout/admin/AppLayout";
 import BuyerLayout from "@/components/layout/buyer/BuyerLayout";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -21,9 +22,13 @@ export function AppRoutes() {
   return (
     <Suspense fallback={<div className="p-6">Loading…</div>}>
       <Routes>
+        {/* Guest-only routes */}
+        <Route element={<GuestRoute />}>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignupPage />} />
+        </Route>
+
         {/* Public routes */}
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/signup" element={<SignupPage />} />
         <Route path="/unauthorized" element={<div>Access Denied</div>} />
 
         {/* Buyer: public browsing */}
