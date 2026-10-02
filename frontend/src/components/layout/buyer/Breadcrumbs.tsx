@@ -11,10 +11,9 @@ import {
 
 type Crumb = { label: string; to?: string };
 
-// Turn "iphone-15-pro" into "Iphone 15 pro"
 const prettifySlug = (slug: string) => {
   const text = decodeURIComponent(slug).replace(/-/g, " ");
-  return text.charAt(0).toUpperCase() + text.slice(1);
+  return text.replace(/\b\w/g, (char) => char.toUpperCase());
 };
 
 const buildCrumbs = (pathname: string): Crumb[] => {

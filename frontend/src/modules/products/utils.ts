@@ -1,4 +1,4 @@
-import type { Product } from "./types";
+import type { Product, ProductVariant } from "./types";
 
 export const formatPrice = (price: number) =>
   `$${price.toLocaleString("en-US")}`;
@@ -43,3 +43,8 @@ export const getAvatarColor = (key: string) => {
   }
   return AVATAR_PALETTE[Math.abs(hash) % AVATAR_PALETTE.length];
 };
+
+export const formatVariantLabel = (v: ProductVariant) =>
+  Object.values(v.attributes ?? {})
+    .filter((x) => ["string", "number", "boolean"].includes(typeof x))
+    .join(" · ");

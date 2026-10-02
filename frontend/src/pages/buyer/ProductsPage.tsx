@@ -16,10 +16,10 @@ import {
 import { SurfaceCard } from "@/components/shared/SurfaceCard";
 import { useProducts } from "@/modules/products/hooks/useProducts";
 import { useCategories } from "@/modules/categories/hooks/useCategories";
-import { formatPriceRange } from "@/modules/products/utils";
+import { formatPrice, formatVariantLabel } from "@/modules/products/utils";
 import { useDebounce } from "@/hooks/useDebounce";
 import { cn } from "@/utils/cn";
-import type { Product } from "@/modules/products/types";
+import type { Product, ProductVariant } from "@/modules/products/types";
 
 const RAM_OPTIONS = [4, 6, 8, 12, 16];
 const STORAGE_OPTIONS = [64, 128, 256, 512, 1024];
@@ -58,17 +58,19 @@ const FilterGroup = ({
   </div>
 );
 
-// Product tile in the listing grid
+// One tile per variant in the listing grid
 const ProductCard = ({
   product,
+  variant,
   onOpen,
 }: {
   product: Product;
+  variant: ProductVariant;
   onOpen: () => void;
 }) => {
-  const variants = product.variants ?? [];
-  const inStock = variants.some((v) => v.stockQuantity > 0);
-  const image = variants[0]?.images[0];
+  const inStock = variant.stockQuantity > 0;
+  const image = variant.images[0];
+  const label = formatVariantLabel(variant);
 
   return (
     <button
@@ -93,14 +95,14 @@ const ProductCard = ({
 
       <div className="mt-3 flex flex-1 flex-col justify-between gap-2">
         <div>
-          <p className="text-xs font-semibold uppercase text-muted-foreground">
-            {product.brand}
-          </p>
           <p className="mt-0.5 line-clamp-2 text-sm font-medium">
             {product.name}
           </p>
+          {label && (
+            <p className="mt-0.5 text-xs text-muted-foreground">{label}</p>
+          )}
         </div>
-        <p className="text-base font-bold">{formatPriceRange(product)}</p>
+        <p className="text-base font-bold">{formatPrice(variant.price)}</p>
       </div>
     </button>
   );
@@ -133,6 +135,11 @@ const ProductsPage = () => {
   const products = data?.data ?? [];
   const total = data?.meta.total ?? 0;
   const totalPages = data?.meta.totalPages ?? 1;
+
+  // One tile per variant
+  const tiles = products.flatMap((p) =>
+    p.variants.map((v) => ({ product: p, variant: v })),
+  );
 
   const selectedCategory = categories.find((c) => c.id === categoryId);
   const isSmartphone = selectedCategory?.slug === "smartphone";
@@ -249,7 +256,7 @@ const ProductsPage = () => {
             </p>
           )}
 
-          {!isLoading && !isError && products.length === 0 && (
+          {!isLoading && !isError && tiles.length === 0 && (
             <p className="col-span-full py-10 text-center text-sm text-muted-foreground">
               No products match your filters.
             </p>
@@ -257,11 +264,16 @@ const ProductsPage = () => {
 
           {!isLoading &&
             !isError &&
-            products.map((p) => (
+            tiles.map(({ product, variant }) => (
               <ProductCard
-                key={p.id}
-                product={p}
-                onOpen={() => navigate(`/shop/${p.slug}`)}
+                key={variant.id}
+                product={product}
+                variant={variant}
+                onOpen={() =>
+                  navigate(
+                    `/shop/${product.slug}?variant=${encodeURIComponent(variant.sku)}`,
+                  )
+                }
               />
             ))}
         </div>
