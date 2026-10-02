@@ -1,11 +1,6 @@
 import { useState } from "react";
 import { Loader2, UploadCloud, X } from "lucide-react";
-import {
-  useFormContext,
-  useFieldArray,
-  useWatch,
-  Controller,
-} from "react-hook-form";
+import { useFormContext, useWatch, Controller } from "react-hook-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import type { ProductFormValues } from "@/modules/products/schema";
@@ -16,6 +11,22 @@ const VariantImageUploader = ({ index }: { index: number }) => {
   const { control } = useFormContext<ProductFormValues>();
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [overIndex, setOverIndex] = useState<number | null>(null);
+
+  const reorder = (
+    urls: string[],
+    from: number,
+    to: number,
+    onChange: (urls: string[]) => void,
+  ) => {
+    if (from === to) return;
+    const next = [...urls];
+    const [moved] = next.splice(from, 1);
+    next.splice(to, 0, moved);
+    onChange(next);
+  };
 
   const upload = async (
     files: FileList | null,
@@ -87,13 +98,38 @@ const VariantImageUploader = ({ index }: { index: number }) => {
               {field.value.map((url, i) => (
                 <div
                   key={url}
-                  className="relative aspect-square rounded-md overflow-hidden border group"
+                  draggable
+                  onDragStart={() => setDragIndex(i)}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    if (dragIndex !== null) setOverIndex(i);
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    if (dragIndex !== null)
+                      reorder(field.value, dragIndex, i, field.onChange);
+                    setDragIndex(null);
+                    setOverIndex(null);
+                  }}
+                  onDragEnd={() => {
+                    setDragIndex(null);
+                    setOverIndex(null);
+                  }}
+                  className={`relative aspect-square rounded-md overflow-hidden border group cursor-grab active:cursor-grabbing ${
+                    dragIndex === i ? "opacity-40" : ""
+                  } ${overIndex === i && dragIndex !== i ? "ring-2 ring-primary" : ""}`}
                 >
                   <img
                     src={url}
                     alt=""
+                    draggable={false}
                     className="h-full w-full object-cover"
                   />
+                  {i === 0 && (
+                    <span className="absolute bottom-1 left-1 rounded bg-black/60 px-1.5 py-0.5 text-[10px] text-white">
+                      Main
+                    </span>
+                  )}
                   <Button
                     type="button"
                     variant="destructive"
@@ -117,8 +153,7 @@ const VariantImageUploader = ({ index }: { index: number }) => {
 
 export const ProductImagesCard = () => {
   const { control } = useFormContext<ProductFormValues>();
-  const { fields } = useFieldArray({ control, name: "variants" });
-  const variants = useWatch({ control, name: "variants" }); // live sku and color values
+  const variants = useWatch({ control, name: "variants" });
 
   return (
     <Card className="px-6 py-4 sm:px-6 rounded-2xl bg-white p-4 sm:p-6 dark:border-gray-800 dark:bg-white/3">
@@ -126,15 +161,15 @@ export const ProductImagesCard = () => {
         <CardTitle>Product Images</CardTitle>
       </CardHeader>
       <CardContent className="pt-6 space-y-6">
-        {fields.map((field, index) => {
+        {variants.map((_, index) => {
           const sku = variants?.[index]?.sku;
           const color = String(variants?.[index]?.attributes?.color ?? "");
           const ram = String(variants?.[index]?.attributes?.ram ?? "");
           const storage = String(variants?.[index]?.attributes?.storage ?? "");
 
           return (
-            <div key={field.id} className="space-y-2">
-              {(fields.length > 1 || sku || color) && (
+            <div key={index} className="space-y-2">
+              {(variants.length > 1 || sku || color) && (
                 <div className="flex items-center gap-2 text-sm">
                   <span className="font-medium">
                     {sku || `Variant ${index + 1}`}

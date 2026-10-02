@@ -18,15 +18,16 @@ export function useVariantSelection(product?: Product) {
   );
 
   const storages = useMemo(
-    () => [
-      ...new Set(
-        variants
-          .map((v) =>
-            v.attributes.storage ? String(v.attributes.storage) : "",
-          )
-          .filter(Boolean),
-      ),
-    ],
+    () =>
+      [
+        ...new Set(
+          variants
+            .map((v) =>
+              v.attributes.storage ? String(v.attributes.storage) : "",
+            )
+            .filter(Boolean),
+        ),
+      ].sort((a, b) => Number(a) - Number(b)),
     [variants],
   );
 
@@ -42,5 +43,17 @@ export function useVariantSelection(product?: Product) {
     [variants, color, storage],
   );
 
-  return { colors, storages, activeVariant, setColor, setStorage };
+  const colorImages = useMemo(
+    () =>
+      Object.fromEntries(
+        colors.map((c) => [
+          c,
+          variants.find((v) => v.attributes.color === c && v.images[0])
+            ?.images[0],
+        ]),
+      ) as Record<string, string | undefined>,
+    [variants, colors],
+  );
+
+  return { colors, colorImages, storages, activeVariant, setColor, setStorage };
 }

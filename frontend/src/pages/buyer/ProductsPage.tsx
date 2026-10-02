@@ -20,6 +20,7 @@ import { formatPrice, formatVariantLabel } from "@/modules/products/utils";
 import { useDebounce } from "@/hooks/useDebounce";
 import { cn } from "@/utils/cn";
 import type { Product, ProductVariant } from "@/modules/products/types";
+import { productImage } from "@/lib/image";
 
 const RAM_OPTIONS = [4, 6, 8, 12, 16];
 const STORAGE_OPTIONS = [64, 128, 256, 512, 1024];
@@ -81,9 +82,9 @@ const ProductCard = ({
       <div className="relative aspect-square overflow-hidden rounded-xl">
         {image && (
           <img
-            src={image}
+            src={productImage(image, { width: 600 })}
             alt={product.name}
-            className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-105"
+            className="h-full w-full object-contain p-2 mix-blend-multiply transition-transform duration-300 group-hover:scale-105"
           />
         )}
         {!inStock && (

@@ -1,4 +1,5 @@
 import { Prisma } from '@prisma/client';
+import { Transform } from 'class-transformer';
 import {
   IsString,
   IsNotEmpty,
@@ -17,6 +18,9 @@ export class UpdateVariantDto {
   @IsUUID()
   id?: string;
 
+  @Transform(({ value }) =>
+    typeof value === 'string' && value.trim() === '' ? undefined : value,
+  )
   @IsOptional()
   @IsString()
   @IsNotEmpty()

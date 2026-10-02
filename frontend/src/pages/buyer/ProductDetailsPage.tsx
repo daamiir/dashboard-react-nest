@@ -11,16 +11,18 @@ import { useVariantSelection } from "@/modules/products/hooks/useVariantSelectio
 import { useCategories } from "@/modules/categories/hooks/useCategories";
 import { CATEGORY_SPECS } from "@/modules/products/config/category-specs.config";
 import { formatPrice } from "@/modules/products/utils";
+import { productImage } from "@/lib/image";
 import { cn } from "@/utils/cn";
+
+const MAX_THUMBS = 5;
 
 const ProductDetailsPage = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const { data: product, isLoading, isError } = useProductBySlug(slug);
   const { data: categories = [] } = useCategories();
-  const { colors, storages, activeVariant, setColor, setStorage } =
+  const { colors, colorImages, storages, activeVariant, setColor, setStorage } =
     useVariantSelection(product);
-
   const [imageIndex, setImageIndex] = useState(0);
   const [descOpen, setDescOpen] = useState(false);
   const [specsOpen, setSpecsOpen] = useState(false);
@@ -81,6 +83,12 @@ const ProductDetailsPage = () => {
   const images = activeVariant.images.length
     ? activeVariant.images
     : ["/placeholder.jpg"];
+
+  const thumbStart = Math.min(
+    Math.max(imageIndex - Math.floor(MAX_THUMBS / 2), 0),
+    Math.max(images.length - MAX_THUMBS, 0),
+  );
+  const visibleThumbs = images.slice(thumbStart, thumbStart + MAX_THUMBS);
   const inStock = activeVariant.stockQuantity > 0;
 
   // Title suffix, e.g. 12/256GB/6.3/48 Silver
@@ -111,23 +119,26 @@ const ProductDetailsPage = () => {
                 >
                   <ChevronLeft className="md:rotate-90" />
                 </Button>
-                {images.map((src, i) => (
-                  <button
-                    key={i}
-                    type="button"
-                    onClick={() => setImageIndex(i)}
-                    className={cn(
-                      "h-16 w-16 shrink-0 overflow-hidden rounded-lg border-2 bg-white p-1 transition",
-                      imageIndex === i ? "border-primary" : "border-gray-200",
-                    )}
-                  >
-                    <img
-                      src={src}
-                      alt={`${product.name} ${i + 1}`}
-                      className="h-full w-full object-contain"
-                    />
-                  </button>
-                ))}
+                {visibleThumbs.map((src, n) => {
+                  const i = thumbStart + n;
+                  return (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => setImageIndex(i)}
+                      className={cn(
+                        "h-16 w-16 shrink-0 overflow-hidden rounded-lg border-2 bg-white p-1 transition",
+                        imageIndex === i ? "border-primary" : "border-gray-200",
+                      )}
+                    >
+                      <img
+                        src={src}
+                        alt={`${product.name} ${i + 1}`}
+                        className="h-full w-full object-contain"
+                      />
+                    </button>
+                  );
+                })}
                 <Button
                   variant="ghost"
                   size="icon-sm"
@@ -142,19 +153,18 @@ const ProductDetailsPage = () => {
 
             <div className="order-1 flex items-center justify-center md:order-2">
               <img
-                src={images[imageIndex] ?? images[0]}
+                src={productImage(images[imageIndex] ?? images[0])}
                 alt={product.name}
-                className="max-h-[400px] w-full object-contain"
+                className="max-h-[400px] w-full object-contain mix-blend-multiply"
               />
             </div>
 
             <div className="order-3 flex flex-col gap-5">
               {colors.length > 0 && (
-                <OptionGroup
-                  label="Color"
+                <ColorPicker
                   current={color}
                   options={colors}
-                  isActive={(c) => color === c}
+                  images={colorImages}
                   onSelect={(c) => {
                     setColor(c);
                     setImageIndex(0);
@@ -163,9 +173,8 @@ const ProductDetailsPage = () => {
               )}
               {storages.length > 0 && (
                 <OptionGroup
-                  label="Storage"
+                  label="Storage, GB"
                   options={storages}
-                  format={(s) => `${s} GB`}
                   isActive={(s) => String(storage) === s}
                   onSelect={setStorage}
                 />
@@ -282,6 +291,55 @@ const OptionGroup = ({
         >
           {format(o)}
         </Button>
+      ))}
+    </div>
+  </div>
+);
+
+const ColorPicker = ({
+  current,
+  options,
+  images,
+  onSelect,
+}: {
+  current?: string;
+  options: string[];
+  images: Record<string, string | undefined>;
+  onSelect: (o: string) => void;
+}) => (
+  <div className="space-y-2">
+    <div className="text-sm font-semibold">
+      Color
+      {current && (
+        <span className="font-normal text-muted-foreground">: {current}</span>
+      )}
+    </div>
+    <div className="flex flex-wrap gap-2">
+      {options.map((o) => (
+        <button
+          key={o}
+          type="button"
+          title={o}
+          aria-label={o}
+          aria-pressed={current === o}
+          onClick={() => onSelect(o)}
+          className={cn(
+            "flex h-12 w-12 items-center justify-center overflow-hidden rounded-xl border-2 bg-white p-1 text-center text-[10px] leading-tight transition",
+            current === o
+              ? "border-primary"
+              : "border-gray-200 hover:border-gray-400",
+          )}
+        >
+          {images[o] ? (
+            <img
+              src={productImage(images[o]!, { width: 272 })}
+              alt={o}
+              className="h-3/4 w-3/4 object-contain mix-blend-multiply"
+            />
+          ) : (
+            o
+          )}
+        </button>
       ))}
     </div>
   </div>
