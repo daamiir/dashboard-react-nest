@@ -21,7 +21,7 @@ const ProductDetailsPage = () => {
   const navigate = useNavigate();
   const { data: product, isLoading, isError } = useProductBySlug(slug);
   const { data: categories = [] } = useCategories();
-  const { colors, colorImages, storages, activeVariant, setColor, setStorage } =
+  const { colors, colorImages, storages, activeVariant, optionStatus, select } =
     useVariantSelection(product);
   const [imageIndex, setImageIndex] = useState(0);
   const [descOpen, setDescOpen] = useState(false);
@@ -165,8 +165,9 @@ const ProductDetailsPage = () => {
                   current={color}
                   options={colors}
                   images={colorImages}
+                  status={(c) => optionStatus("color", c)}
                   onSelect={(c) => {
-                    setColor(c);
+                    select("color", c);
                     setImageIndex(0);
                   }}
                 />
@@ -176,7 +177,8 @@ const ProductDetailsPage = () => {
                   label="Storage, GB"
                   options={storages}
                   isActive={(s) => String(storage) === s}
-                  onSelect={setStorage}
+                  status={(s) => optionStatus("storage", s)}
+                  onSelect={(s) => select("storage", s)}
                 />
               )}
               {specs.length > 0 && (
@@ -263,6 +265,7 @@ const OptionGroup = ({
   options,
   format = (o) => o,
   isActive,
+  status,
   onSelect,
 }: {
   label: string;
@@ -270,6 +273,7 @@ const OptionGroup = ({
   options: string[];
   format?: (o: string) => string;
   isActive: (o: string) => boolean;
+  status?: (o: string) => string;
   onSelect: (o: string) => void;
 }) => (
   <div className="space-y-2">
@@ -285,8 +289,12 @@ const OptionGroup = ({
           key={o}
           type="button"
           size="sm"
-          className="rounded-full"
+          className={cn(
+            "rounded-full disabled:line-through",
+            status?.(o) === "switch" && "opacity-60",
+          )}
           variant={isActive(o) ? "default" : "outline"}
+          disabled={status?.(o) === "out"}
           onClick={() => onSelect(o)}
         >
           {format(o)}
@@ -300,11 +308,13 @@ const ColorPicker = ({
   current,
   options,
   images,
+  status,
   onSelect,
 }: {
   current?: string;
   options: string[];
   images: Record<string, string | undefined>;
+  status?: (o: string) => string;
   onSelect: (o: string) => void;
 }) => (
   <div className="space-y-2">
@@ -322,12 +332,14 @@ const ColorPicker = ({
           title={o}
           aria-label={o}
           aria-pressed={current === o}
+          disabled={status?.(o) === "out"}
           onClick={() => onSelect(o)}
           className={cn(
-            "flex h-12 w-12 items-center justify-center overflow-hidden rounded-xl border-2 bg-white p-1 text-center text-[10px] leading-tight transition",
+            "flex h-12 w-12 ... leading-tight transition disabled:cursor-not-allowed disabled:opacity-40 disabled:grayscale",
             current === o
               ? "border-primary"
               : "border-gray-200 hover:border-gray-400",
+            status?.(o) === "switch" && "opacity-50",
           )}
         >
           {images[o] ? (
