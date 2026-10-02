@@ -70,8 +70,20 @@ const ProductCard = ({
   onOpen: () => void;
 }) => {
   const inStock = variant.stockQuantity > 0;
-  const image = variant.images[0];
+  const images = variant.images.slice(0, 5);
+  const [index, setIndex] = useState(0);
   const label = formatVariantLabel(variant);
+
+  const handleMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const ratio = (e.clientX - rect.left) / rect.width;
+    setIndex(
+      Math.min(
+        images.length - 1,
+        Math.max(0, Math.floor(ratio * images.length)),
+      ),
+    );
+  };
 
   return (
     <button
@@ -79,18 +91,35 @@ const ProductCard = ({
       onClick={onOpen}
       className="group flex flex-col rounded-2xl bg-white p-3 text-left transition-shadow hover:shadow-md"
     >
-      <div className="relative aspect-square overflow-hidden rounded-xl">
-        {image && (
+      <div
+        onMouseMove={handleMove}
+        onMouseLeave={() => setIndex(0)}
+        className="relative aspect-square cursor-grab overflow-hidden rounded-xl active:cursor-grabbing"
+      >
+        {images[index] && (
           <img
-            src={productImage(image, { width: 600 })}
+            src={productImage(images[index], { width: 600 })}
             alt={product.name}
-            className="h-full w-full object-contain p-2 mix-blend-multiply transition-transform duration-300 group-hover:scale-105"
+            className="h-full w-full object-contain p-2 mix-blend-multiply"
           />
         )}
         {!inStock && (
           <Badge variant="destructive" className="absolute right-2 top-2">
             Out of Stock
           </Badge>
+        )}
+        {images.length > 1 && (
+          <div className="absolute bottom-0 left-0 right-0 flex justify-center gap-1.5">
+            {images.map((_, i) => (
+              <span
+                key={i}
+                className={cn(
+                  "h-1.5 w-1.5 rounded-full",
+                  i === index ? "bg-orange-500" : "bg-gray-300",
+                )}
+              />
+            ))}
+          </div>
         )}
       </div>
 
