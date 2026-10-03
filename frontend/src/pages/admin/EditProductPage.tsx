@@ -15,6 +15,7 @@ import {
 import { useCategories } from "@/modules/categories/hooks/useCategories";
 import {
   productSchema,
+  pruneColorImages,
   type ProductFormInput,
   type ProductFormValues,
 } from "@/modules/products/schema";
@@ -38,6 +39,7 @@ const EditProductPage = () => {
       variants: [
         { sku: "", price: 0, stockQuantity: 1, images: [], attributes: {} },
       ],
+      colorImages: [],
     },
   });
 
@@ -54,8 +56,12 @@ const EditProductPage = () => {
         sku: v.sku,
         price: v.price,
         stockQuantity: v.stockQuantity,
-        images: v.images,
+        images: v.ownImages,
         attributes: v.attributes ?? {},
+      })),
+      colorImages: product.colorImages.map(({ color, images }) => ({
+        color,
+        images,
       })),
     });
   }, [product, methods]);
@@ -79,6 +85,7 @@ const EditProductPage = () => {
     const payload = {
       ...data,
       attributes: attributesResult.data,
+      colorImages: pruneColorImages(data),
     };
 
     updateProduct.mutate(

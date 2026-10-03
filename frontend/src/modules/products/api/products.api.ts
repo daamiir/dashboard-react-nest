@@ -13,7 +13,9 @@ export type CreateProductPayload = Omit<
   Product,
   "id" | "slug" | "createdAt" | "createdById" | "variants"
 > & {
-  variants: (Omit<ProductVariant, "id" | "sku"> & { sku?: string })[];
+  variants: (Omit<ProductVariant, "id" | "sku" | "ownImages"> & {
+    sku?: string;
+  })[];
 };
 
 export type UpdateProductPayload = Partial<CreateProductPayload>;

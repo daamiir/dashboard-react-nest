@@ -9,12 +9,18 @@ export const variantSchema = z.object({
   attributes: z.record(z.string(), z.unknown()),
 });
 
+export const colorImagesSchema = z.object({
+  color: z.string(),
+  images: z.array(z.string()),
+});
+
 export const productSchema = z.object({
   name: z.string().min(1, "Product name is required"),
   categoryId: z.string().uuid("Category is required"),
   brand: z.string().min(1, "Brand is required"),
   description: z.string().min(1, "Description is required"),
   attributes: z.record(z.string(), z.unknown()),
+  colorImages: z.array(colorImagesSchema),
 
   variants: z.array(variantSchema).min(1, "At least one variant is required"),
 });
@@ -22,3 +28,10 @@ export const productSchema = z.object({
 export type VariantFormValues = z.infer<typeof variantSchema>;
 export type ProductFormInput = z.input<typeof productSchema>;
 export type ProductFormValues = z.infer<typeof productSchema>;
+
+export const pruneColorImages = (data: ProductFormValues) => {
+  const used = new Set(
+    data.variants.map((v) => String(v.attributes?.color ?? "")),
+  );
+  return data.colorImages.filter((c) => used.has(c.color) && c.images.length);
+};

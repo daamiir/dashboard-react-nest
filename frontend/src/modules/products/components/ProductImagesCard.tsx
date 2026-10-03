@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Loader2, UploadCloud, X } from "lucide-react";
 import { useFormContext, useWatch, Controller } from "react-hook-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,8 +6,12 @@ import { Button } from "@/components/ui/button";
 import type { ProductFormValues } from "@/modules/products/schema";
 import { uploadImage } from "@/modules/products/api/uploads.api";
 
-// One upload dropzone per variant, stores Cloudinary URLs in the form
-const VariantImageUploader = ({ index }: { index: number }) => {
+type ImagesFieldName =
+  | `variants.${number}.images`
+  | `colorImages.${number}.images`;
+
+// Upload dropzone bound to any images field, stores Cloudinary URLs
+const ImageUploader = ({ name }: { name: ImagesFieldName }) => {
   const { control } = useFormContext<ProductFormValues>();
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -48,12 +52,12 @@ const VariantImageUploader = ({ index }: { index: number }) => {
 
   return (
     <Controller
-      name={`variants.${index}.images`}
+      name={name}
       control={control}
       render={({ field }) => (
         <div className="space-y-4">
           <label
-            htmlFor={`variant-images-${index}`}
+            htmlFor={`images-${name}`}
             onDragOver={(e) => e.preventDefault()}
             onDrop={(e) => {
               e.preventDefault();
@@ -78,7 +82,7 @@ const VariantImageUploader = ({ index }: { index: number }) => {
               PNG, JPG, WEBP or GIF (max 5MB)
             </p>
             <input
-              id={`variant-images-${index}`}
+              id={`images-${name}`}
               type="file"
               accept=".png,.jpg,.jpeg,.webp,.gif"
               multiple
@@ -151,9 +155,60 @@ const VariantImageUploader = ({ index }: { index: number }) => {
   );
 };
 
+// Per-variant opt-in to its own images instead of the color set
+const VariantOverride = ({
+  index,
+  label,
+}: {
+  index: number;
+  label: string;
+}) => {
+  const { control, setValue } = useFormContext<ProductFormValues>();
+  const own = useWatch({ control, name: `variants.${index}.images` });
+  const [custom, setCustom] = useState(own.length > 0);
+
+  return (
+    <div className="space-y-2">
+      <label className="flex items-center gap-2 text-sm">
+        <input
+          type="checkbox"
+          checked={custom}
+          onChange={(e) => {
+            setCustom(e.target.checked);
+            // Unchecking clears the override so the variant inherits again
+            if (!e.target.checked) setValue(`variants.${index}.images`, []);
+          }}
+        />
+        {label}: custom images
+      </label>
+      {custom && <ImageUploader name={`variants.${index}.images`} />}
+    </div>
+  );
+};
+
 export const ProductImagesCard = () => {
-  const { control } = useFormContext<ProductFormValues>();
+  const { control, setValue } = useFormContext<ProductFormValues>();
   const variants = useWatch({ control, name: "variants" });
+  const colorImages = useWatch({ control, name: "colorImages" });
+
+  const colors = [
+    ...new Set(
+      variants.map((v) => String(v.attributes?.color ?? "")).filter(Boolean),
+    ),
+  ];
+
+  // Ensure every color used by a variant has an entry in the form
+  useEffect(() => {
+    const missing = colors.filter(
+      (c) => !colorImages.some((ci) => ci.color === c),
+    );
+    if (missing.length) {
+      setValue("colorImages", [
+        ...colorImages,
+        ...missing.map((color) => ({ color, images: [] })),
+      ]);
+    }
+  }, [colors.join("|"), colorImages, setValue]);
 
   return (
     <Card className="px-6 py-4 sm:px-6 rounded-2xl bg-white p-4 sm:p-6 dark:border-gray-800 dark:bg-white/3">
@@ -161,35 +216,31 @@ export const ProductImagesCard = () => {
         <CardTitle>Product Images</CardTitle>
       </CardHeader>
       <CardContent className="pt-6 space-y-6">
-        {variants.map((_, index) => {
-          const sku = variants?.[index]?.sku;
-          const color = String(variants?.[index]?.attributes?.color ?? "");
-          const ram = String(variants?.[index]?.attributes?.ram ?? "");
-          const storage = String(variants?.[index]?.attributes?.storage ?? "");
-
+        {colors.map((color) => {
+          const idx = colorImages.findIndex((ci) => ci.color === color);
+          if (idx === -1) return null;
           return (
-            <div key={index} className="space-y-2">
-              {(variants.length > 1 || sku || color) && (
-                <div className="flex items-center gap-2 text-sm">
-                  <span className="font-medium">
-                    {sku || `Variant ${index + 1}`}
-                  </span>
-                  {color && (
-                    <span className="text-xs text-muted-foreground">
-                      {color}
-                    </span>
-                  )}
-                  {(ram || storage) && (
-                    <span className="text-xs text-muted-foreground">
-                      {ram && storage ? `${ram}/${storage}` : ram || storage}
-                    </span>
-                  )}
-                </div>
-              )}
-              <VariantImageUploader index={index} />
+            <div key={color} className="space-y-2">
+              <div className="text-sm font-medium">{color}</div>
+              <ImageUploader name={`colorImages.${idx}.images`} />
             </div>
           );
         })}
+
+        {variants.length > 1 && (
+          <div className="space-y-3 border-t pt-4">
+            {variants.map((v, index) => {
+              const a = v.attributes;
+              const label =
+                v.sku ||
+                [a?.color, a?.ram, a?.storage].filter(Boolean).join(" / ") ||
+                `Variant ${index + 1}`;
+              return (
+                <VariantOverride key={index} index={index} label={label} />
+              );
+            })}
+          </div>
+        )}
       </CardContent>
     </Card>
   );

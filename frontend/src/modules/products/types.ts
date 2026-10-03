@@ -11,6 +11,7 @@ export interface ProductVariant {
   price: number;
   stockQuantity: number;
   images: string[];
+  ownImages: string[];
   attributes: Record<string, unknown>;
 }
 
@@ -27,6 +28,7 @@ export interface Product {
   createdById: string;
 
   variants: ProductVariant[];
+  colorImages: { color: string; images: string[] }[];
 }
 
 export type SortBy = "name" | "brand" | "price";
