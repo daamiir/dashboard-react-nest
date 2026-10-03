@@ -34,9 +34,10 @@ export class UpdateVariantDto {
   @Min(0)
   stockQuantity!: number;
 
+  @IsOptional()
   @IsArray()
   @IsString({ each: true })
-  images!: string[];
+  images?: string[];
 
   @IsObject()
   attributes!: Prisma.InputJsonValue;

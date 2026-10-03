@@ -11,6 +11,7 @@ import {
   IsOptional,
 } from 'class-validator';
 import { UpdateVariantDto } from './update-variant.dto';
+import { ColorImagesDto } from './color-images.dto';
 
 // (upsert + delete-missing) logic
 export class UpdateProductDto {
@@ -44,4 +45,10 @@ export class UpdateProductDto {
   @ValidateNested({ each: true })
   @Type(() => UpdateVariantDto)
   variants?: UpdateVariantDto[];
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => ColorImagesDto)
+  colorImages?: ColorImagesDto[];
 }

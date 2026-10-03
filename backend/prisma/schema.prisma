@@ -44,6 +44,7 @@ model Product {
   isActive    Boolean          @default(true)
 
   variants    ProductVariant[]
+  colorImages ProductColorImages[]
 
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
@@ -51,6 +52,18 @@ model Product {
   @@index([attributes(ops: JsonbPathOps)], type: Gin)
   @@index([categoryId])
   @@index([brand])
+}
+
+model ProductColorImages {
+  id        String   @id @default(uuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  color     String
+  images    String[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([productId, color])
 }
 
 // Product variation / SKU

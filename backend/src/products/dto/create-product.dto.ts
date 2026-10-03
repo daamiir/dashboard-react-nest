@@ -8,8 +8,10 @@ import {
   IsArray,
   ValidateNested,
   ArrayMinSize,
+  IsOptional,
 } from 'class-validator';
 import { CreateVariantDto } from './create-variant.dto';
+import { ColorImagesDto } from './color-images.dto';
 
 export class CreateProductDto {
   @IsString()
@@ -35,4 +37,10 @@ export class CreateProductDto {
   @ValidateNested({ each: true })
   @Type(() => CreateVariantDto)
   variants!: CreateVariantDto[];
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => ColorImagesDto)
+  colorImages?: ColorImagesDto[];
 }

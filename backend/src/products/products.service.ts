@@ -15,6 +15,11 @@ import { UpdateVariantDto } from './dto/update-variant.dto';
 import { generateSlug } from './utils/slugify';
 import { generateSku } from './utils/generate-sku';
 
+const PRODUCT_INCLUDE = { variants: true, colorImages: true } as const;
+type ProductWithImages = Prisma.ProductGetPayload<{
+  include: typeof PRODUCT_INCLUDE;
+}>;
+
 @Injectable()
 export class ProductsService {
   constructor(
@@ -86,6 +91,22 @@ export class ProductsService {
     return { [sortBy!]: sortOrder };
   }
 
+  // Resolved images go to images, the raw override goes to ownImages
+  private withImages(p: ProductWithImages) {
+    const byColor = new Map(p.colorImages.map((c) => [c.color, c.images]));
+    return {
+      ...p,
+      variants: p.variants.map((v) => {
+        const color = (v.attributes as { color?: string }).color ?? '';
+        return {
+          ...v,
+          ownImages: v.images,
+          images: v.images.length ? v.images : (byColor.get(color) ?? []),
+        };
+      }),
+    };
+  }
+
   async findAll(query: FindProductsQueryDto) {
     const { page, limit } = query;
     const skip = (page! - 1) * limit!;
@@ -102,13 +123,13 @@ export class ProductsService {
         orderBy,
         skip,
         take: limit,
-        include: { variants: true },
+        include: PRODUCT_INCLUDE,
       }),
       this.prisma.product.count({ where }),
     ]);
 
     return {
-      data,
+      data: data.map((p) => this.withImages(p)),
       meta: {
         total,
         page: page!,
@@ -121,23 +142,23 @@ export class ProductsService {
   async findOne(id: string) {
     const product = await this.prisma.product.findUnique({
       where: { id },
-      include: { variants: true },
+      include: PRODUCT_INCLUDE,
     });
     if (!product) throw new NotFoundException('Product not found');
-    return product;
+    return this.withImages(product);
   }
 
   async findBySlug(slug: string) {
     const product = await this.prisma.product.findUnique({
       where: { slug },
-      include: { variants: true },
+      include: PRODUCT_INCLUDE,
     });
     if (!product) throw new NotFoundException('Product not found');
-    return product;
+    return this.withImages(product);
   }
 
   async create(createProductDto: CreateProductDto, adminId: string) {
-    const { variants, ...productData } = createProductDto;
+    const { variants, colorImages, ...productData } = createProductDto;
 
     // Fill in SKUs before validation/slug generation, since both depend on it
     const variantsWithSku = await Promise.all(
@@ -155,15 +176,17 @@ export class ProductsService {
 
     // Nested write: Prisma wraps this in a single atomic SQL transaction,
     // so a product is never persisted without at least one variant
-    return this.prisma.product.create({
+    const created = await this.prisma.product.create({
       data: {
         ...productData,
         slug: generateSlug(productData.name),
         createdById: adminId,
         variants: { create: variantsWithSku },
+        colorImages: { create: colorImages ?? [] },
       },
-      include: { variants: true },
+      include: PRODUCT_INCLUDE,
     });
+    return this.withImages(created);
   }
 
   async update(id: string, updateProductDto: UpdateProductDto) {
@@ -173,7 +196,7 @@ export class ProductsService {
     });
     if (!existing) throw new NotFoundException('Product not found');
 
-    const { variants, ...productData } = updateProductDto;
+    const { variants, colorImages, ...productData } = updateProductDto;
 
     // Fill in SKUs for any new variants (no id) before validation/slug/transaction
     const variantsWithSku = variants
@@ -214,7 +237,7 @@ export class ProductsService {
       }
     }
 
-    return this.prisma.$transaction(async (tx) => {
+    const updated = await this.prisma.$transaction(async (tx) => {
       if (variantsWithSku) {
         const incomingIds = variantsWithSku
           .map((v) => v.id)
@@ -241,15 +264,32 @@ export class ProductsService {
         }
       }
 
+      if (colorImages) {
+        await tx.productColorImages.deleteMany({
+          where: {
+            productId: id,
+            color: { notIn: colorImages.map((c) => c.color) },
+          },
+        });
+        for (const c of colorImages) {
+          await tx.productColorImages.upsert({
+            where: { productId_color: { productId: id, color: c.color } },
+            update: { images: c.images },
+            create: { productId: id, color: c.color, images: c.images },
+          });
+        }
+      }
+
       return tx.product.update({
         where: { id },
         data: {
           ...productData,
           ...slugUpdate,
         } satisfies Prisma.ProductUpdateInput,
-        include: { variants: true },
+        include: PRODUCT_INCLUDE,
       });
     });
+    return this.withImages(updated);
   }
 
   async remove(id: string) {
