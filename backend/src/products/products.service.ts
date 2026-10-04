@@ -15,7 +15,10 @@ import { UpdateVariantDto } from './dto/update-variant.dto';
 import { generateSlug } from './utils/slugify';
 import { generateSku } from './utils/generate-sku';
 
-const PRODUCT_INCLUDE = { variants: true, colorImages: true } as const;
+const PRODUCT_INCLUDE = {
+  variants: { orderBy: { position: 'asc' } },
+  colorImages: true,
+} as const;
 type ProductWithImages = Prisma.ProductGetPayload<{
   include: typeof PRODUCT_INCLUDE;
 }>;
@@ -181,7 +184,9 @@ export class ProductsService {
         ...productData,
         slug: generateSlug(productData.name),
         createdById: adminId,
-        variants: { create: variantsWithSku },
+        variants: {
+          create: variantsWithSku.map((v, position) => ({ ...v, position })),
+        },
         colorImages: { create: colorImages ?? [] },
       },
       include: PRODUCT_INCLUDE,
@@ -249,16 +254,16 @@ export class ProductsService {
         });
 
         // Smart sync: has id -> update (preserves id/history), no id -> create
-        for (const variant of variantsWithSku) {
+        for (const [position, variant] of variantsWithSku.entries()) {
           const { id: variantId, ...variantData } = variant;
           if (variantId) {
             await tx.productVariant.update({
               where: { id: variantId },
-              data: variantData,
+              data: { ...variantData, position },
             });
           } else {
             await tx.productVariant.create({
-              data: { ...variantData, productId: id },
+              data: { ...variantData, position, productId: id },
             });
           }
         }
@@ -303,8 +308,11 @@ export class ProductsService {
     const productAttributes = product.attributes as Prisma.InputJsonValue;
     const sku = dto.sku ?? (await generateSku(this.prisma));
     ProductVariantValidator.validateAll(productAttributes, [{ ...dto, sku }]);
+    const position = await this.prisma.productVariant.count({
+      where: { productId },
+    });
     return this.prisma.productVariant.create({
-      data: { ...dto, sku, productId },
+      data: { ...dto, sku, productId, position },
     });
   }
 

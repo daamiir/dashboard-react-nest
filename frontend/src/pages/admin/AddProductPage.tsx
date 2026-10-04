@@ -1,16 +1,20 @@
 import { useNavigate } from "react-router-dom";
-import { useForm, FormProvider } from "react-hook-form";
+import { useForm, FormProvider, type FieldErrors } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import {
   ProductDescriptionCard,
-  PricingAvailabilityCard,
+  ProductVariantsCard,
   ProductImagesCard,
+  VARIANT_SPECS,
+  validateSpecs,
 } from "@/modules/products";
 import { useCreateProduct } from "@/modules/products/hooks/useProducts";
 import { useCategories } from "@/modules/categories/hooks/useCategories";
 import {
   productSchema,
+  pruneColorImages,
   type ProductFormInput,
   type ProductFormValues,
 } from "@/modules/products/schema";
@@ -32,6 +36,7 @@ const AddProductPage = () => {
       variants: [
         { sku: "", price: 0, stockQuantity: 1, images: [], attributes: {} },
       ],
+      colorImages: [],
     },
   });
 
@@ -52,9 +57,22 @@ const AddProductPage = () => {
       return;
     }
 
+    // Block submit if any variant has an empty spec
+    const specs = VARIANT_SPECS[category?.slug ?? ""] ?? [];
+    const incomplete =
+      specs.length > 0 &&
+      data.variants.some(
+        (v) => Object.keys(validateSpecs(v.attributes, specs)).length > 0,
+      );
+    if (incomplete) {
+      toast.error("Fill color, RAM and storage for every variant");
+      return;
+    }
+
     const payload = {
       ...data,
       attributes: attributesResult.data,
+      colorImages: pruneColorImages(data),
     };
 
     createProduct.mutate(payload, {
@@ -62,16 +80,21 @@ const AddProductPage = () => {
     });
   };
 
+  const onInvalid = (errors: FieldErrors<ProductFormInput>) => {
+    console.error(errors);
+    toast.error("Some fields are invalid, check variants and images");
+  };
+
   return (
     <FormProvider {...methods}>
-      <form onSubmit={methods.handleSubmit(onSubmit)}>
+      <form onSubmit={methods.handleSubmit(onSubmit, onInvalid)}>
         <div className="max-w-7xl mx-auto">
           <h1 className="text-xl font-semibold mb-4">Add Product</h1>
           <div className="space-y-6">
             <div className="flex flex-col gap-6">
               <ProductDescriptionCard />
+              <ProductVariantsCard />
               <ProductImagesCard />
-              <PricingAvailabilityCard />
             </div>
 
             {createProduct.isError && (

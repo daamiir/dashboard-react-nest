@@ -1,3 +1,6 @@
+import { useState } from "react";
+import { cn } from "@/utils/cn";
+import { CollapseToggle } from "./CollapseToggle";
 import { useFormContext, useWatch, Controller } from "react-hook-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -97,6 +100,7 @@ const SpecFieldInput = ({ field }: { field: SpecField }) => {
 };
 
 export const ProductDescriptionCard = () => {
+  const [open, setOpen] = useState(true);
   const { register, control } = useFormContext<ProductFormValues>();
   const categoryId = useWatch({ control, name: "categoryId" });
   const { data: categories = [] } = useCategories();
@@ -114,9 +118,12 @@ export const ProductDescriptionCard = () => {
   return (
     <Card className="px-4 py-4 sm:px-6 rounded-2xl bg-white p-4 sm:p-6 dark:border-gray-800 dark:bg-white/3">
       <CardHeader>
-        <CardTitle>Product Description</CardTitle>
+        <div className="flex items-center gap-1">
+          <CollapseToggle open={open} onToggle={() => setOpen(!open)} />
+          <CardTitle>Product Description</CardTitle>
+        </div>
       </CardHeader>
-      <CardContent className="pt-6 space-y-6">
+      <CardContent className={cn("pt-6 space-y-6", !open && "hidden")}>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
           <FormInput
             name="name"

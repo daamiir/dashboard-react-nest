@@ -77,6 +77,7 @@ model ProductVariant {
   price         Decimal  @db.Decimal(12, 2)
   stockQuantity Int      @default(0)
   images        String[]
+  position      Int      @default(0)
 
   // Variant-specific attributes
   attributes    Json
