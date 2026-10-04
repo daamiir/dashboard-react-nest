@@ -228,7 +228,11 @@ const VariantForm = ({
 };
 
 export const ProductVariantsCard = () => {
-  const { control, getValues } = useFormContext<ProductFormValues>();
+  const {
+    control,
+    getValues,
+    formState: { errors: formErrors },
+  } = useFormContext<ProductFormValues>();
   const categoryId = useWatch({ control, name: "categoryId" });
   const { data: categories = [] } = useCategories();
   const selectedCategory = categories.find((c) => c.id === categoryId);
@@ -346,6 +350,18 @@ export const ProductVariantsCard = () => {
         </div>
       </CardHeader>
       <CardContent className={cn("pt-6 space-y-6", !open && "hidden")}>
+        {fields.length === 0 && (
+          <p
+            className={cn(
+              "text-sm",
+              formErrors.variants
+                ? "text-destructive"
+                : "text-muted-foreground",
+            )}
+          >
+            No variants yet. Press Add Variant to create one.
+          </p>
+        )}
         <div
           className={
             view === "grid"
@@ -380,16 +396,14 @@ export const ProductVariantsCard = () => {
                 >
                   <Pencil className="h-4 w-4" />
                 </Button>
-                {fields.length > 1 && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setDeleteIndex(index)}
-                  >
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                )}
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setDeleteIndex(index)}
+                >
+                  <Trash2 className="h-4 w-4 text-destructive" />
+                </Button>
               </div>
             );
             return (

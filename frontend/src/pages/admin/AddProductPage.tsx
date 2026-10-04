@@ -33,9 +33,7 @@ const AddProductPage = () => {
       brand: "",
       description: "",
       attributes: {},
-      variants: [
-        { sku: "", price: 0, stockQuantity: 1, images: [], attributes: {} },
-      ],
+      variants: [],
       colorImages: [],
     },
   });
