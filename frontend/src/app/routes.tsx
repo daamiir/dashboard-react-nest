@@ -7,15 +7,19 @@ import { Routes, Route } from "react-router-dom";
 
 const SignupPage = lazy(() => import("@/pages/auth/SignupPage"));
 const LoginPage = lazy(() => import("@/pages/auth/LoginPage"));
+
 const LandingPage = lazy(() => import("@/pages/buyer/LandingPage"));
 const ProductsPage = lazy(() => import("@/pages/buyer/ProductsPage"));
 const ProductDetailsPage = lazy(
   () => import("@/pages/buyer/ProductDetailsPage"),
 );
+const CartPage = lazy(() => import("@/pages/buyer/CartPage"));
+
 const DashboardPage = lazy(() => import("@/pages/admin/DashboardPage"));
 const ProductsAdminPage = lazy(() => import("@/pages/admin/ProductsPage"));
 const AddProductPage = lazy(() => import("@/pages/admin/AddProductPage"));
 const EditProductPage = lazy(() => import("@/pages/admin/EditProductPage"));
+
 const NotFoundPage = lazy(() => import("@/pages/NotFoundPage"));
 
 export function AppRoutes() {
@@ -36,7 +40,7 @@ export function AppRoutes() {
           <Route path="/" element={<LandingPage />} />
           <Route path="/shop" element={<ProductsPage />} />
           <Route path="/shop/:slug" element={<ProductDetailsPage />} />
-          <Route path="/cart" element={<div>Cart Page</div>} />
+          <Route path="/cart" element={<CartPage />} />
 
           {/* Buyer: protected routes */}
           <Route element={<ProtectedRoute allowedRoles={["BUYER", "ADMIN"]} />}>

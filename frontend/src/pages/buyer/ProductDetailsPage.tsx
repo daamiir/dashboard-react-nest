@@ -13,6 +13,8 @@ import { CATEGORY_SPECS } from "@/modules/products/config/category-specs.config"
 import { formatPrice } from "@/modules/products/utils";
 import { productImage } from "@/lib/image";
 import { cn } from "@/utils/cn";
+import { toast } from "sonner";
+import { useCartStore } from "@/modules/cart/store/useCartStore";
 
 const MAX_THUMBS = 5;
 
@@ -26,6 +28,11 @@ const ProductDetailsPage = () => {
   const [imageIndex, setImageIndex] = useState(0);
   const [descOpen, setDescOpen] = useState(false);
   const [specsOpen, setSpecsOpen] = useState(false);
+  const addItem = useCartStore((s) => s.addItem);
+  const inCart = useCartStore(
+    (s) =>
+      s.items.find((i) => i.variantId === activeVariant?.id)?.quantity ?? 0,
+  );
 
   if (isLoading) {
     return (
@@ -90,12 +97,26 @@ const ProductDetailsPage = () => {
   );
   const visibleThumbs = images.slice(thumbStart, thumbStart + MAX_THUMBS);
   const inStock = activeVariant.stockQuantity > 0;
+  const atMax = inStock && inCart >= activeVariant.stockQuantity;
 
   // Title suffix, e.g. 12/256GB/6.3/48 Silver
   const suffix =
     ram && storage
       ? ` ${ram}/${storage}GB/${screenSize ?? ""}/${mainCamera ?? ""} ${color ?? ""}`
       : "";
+
+  const handleAddToCart = () => {
+    addItem({
+      variantId: activeVariant.id,
+      productId: product.id,
+      slug: product.slug,
+      name: product.name + suffix,
+      image: activeVariant.images[0] ?? null,
+      price: activeVariant.price,
+      stockQuantity: activeVariant.stockQuantity,
+    });
+    toast.success("Added to cart");
+  };
 
   return (
     <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
@@ -249,8 +270,13 @@ const ProductDetailsPage = () => {
               {inStock ? "In Stock" : "Out of Stock"}
             </Badge>
           </div>
-          <Button size="lg" className="mt-5 w-full" disabled={!inStock}>
-            {inStock ? "Add to Cart" : "Out of Stock"}
+          <Button
+            size="lg"
+            className="mt-5 w-full"
+            disabled={!inStock || atMax}
+            onClick={handleAddToCart}
+          >
+            {!inStock ? "Out of Stock" : atMax ? "Max in cart" : "Add to Cart"}
           </Button>
         </SurfaceCard>
       </aside>
