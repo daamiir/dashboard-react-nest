@@ -36,6 +36,10 @@ const data: { navMain: NavItem[] } = {
           title: "Add Product",
           url: "/admin/products/add",
         },
+        {
+          title: "Categories",
+          url: "/admin/categories",
+        },
       ],
     },
   ],

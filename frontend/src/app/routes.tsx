@@ -19,6 +19,7 @@ const DashboardPage = lazy(() => import("@/pages/admin/DashboardPage"));
 const ProductsAdminPage = lazy(() => import("@/pages/admin/ProductsPage"));
 const AddProductPage = lazy(() => import("@/pages/admin/AddProductPage"));
 const EditProductPage = lazy(() => import("@/pages/admin/EditProductPage"));
+const CategoriesPage = lazy(() => import("@/pages/admin/CategoriesPage"));
 
 const NotFoundPage = lazy(() => import("@/pages/NotFoundPage"));
 
@@ -53,7 +54,7 @@ export function AppRoutes() {
           <Route element={<AppLayout />}>
             <Route path="/admin" element={<DashboardPage />} />
             <Route path="/admin/products" element={<ProductsAdminPage />} />
-
+            <Route path="/admin/categories" element={<CategoriesPage />} />
             <Route path="/admin/products/add" element={<AddProductPage />} />
             <Route
               path="/admin/products/edit/:id"
