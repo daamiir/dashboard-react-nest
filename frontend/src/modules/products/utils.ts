@@ -3,6 +3,9 @@ import type { Product, ProductVariant } from "./types";
 export const formatPrice = (price: number) =>
   `$${price.toLocaleString("en-US")}`;
 
+export const variantUrl = (slug: string, sku: string) =>
+  "/shop/" + slug + "?variant=" + encodeURIComponent(sku);
+
 export const variantTitle = (product: Product, v: ProductVariant) => {
   const { ram, storage, color } = v.attributes;
   const { screenSize, mainCamera } = product.attributes;

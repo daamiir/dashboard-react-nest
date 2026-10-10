@@ -21,6 +21,7 @@ import { useDebounce } from "@/hooks/useDebounce";
 import { cn } from "@/utils/cn";
 import type { Product, ProductVariant } from "@/modules/products/types";
 import { productImage } from "@/lib/image";
+import { WishlistButton } from "@/modules/wishlist/components/WishlistButton";
 
 const RAM_OPTIONS = [4, 6, 8, 12, 16];
 const STORAGE_OPTIONS = [64, 128, 256, 512, 1024];
@@ -295,16 +296,22 @@ const ProductsPage = () => {
           {!isLoading &&
             !isError &&
             tiles.map(({ product, variant }) => (
-              <ProductCard
-                key={variant.id}
-                product={product}
-                variant={variant}
-                onOpen={() =>
-                  navigate(
-                    `/shop/${product.slug}?variant=${encodeURIComponent(variant.sku)}`,
-                  )
-                }
-              />
+              <div key={variant.id} className="relative grid">
+                <ProductCard
+                  product={product}
+                  variant={variant}
+                  onOpen={() =>
+                    navigate(
+                      `/shop/${product.slug}?variant=${encodeURIComponent(variant.sku)}`,
+                    )
+                  }
+                />
+                <WishlistButton
+                  product={product}
+                  variant={variant}
+                  className="absolute right-4 top-4 size-8"
+                />
+              </div>
             ))}
         </div>
 

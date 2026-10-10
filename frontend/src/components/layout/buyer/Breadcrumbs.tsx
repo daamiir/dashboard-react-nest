@@ -25,6 +25,8 @@ const buildCrumbs = (pathname: string): Crumb[] => {
     if (slug) crumbs.push({ label: prettifySlug(slug) });
   } else if (section === "cart") {
     crumbs.push({ label: "Cart" });
+  } else if (section === "wishlist") {
+    crumbs.push({ label: "Wishlist" });
   } else if (section === "checkout") {
     crumbs.push({ label: "Checkout" });
   }

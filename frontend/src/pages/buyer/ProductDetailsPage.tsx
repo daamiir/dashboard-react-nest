@@ -15,6 +15,7 @@ import { productImage } from "@/lib/image";
 import { cn } from "@/utils/cn";
 import { toast } from "sonner";
 import { useCartStore } from "@/modules/cart/store/useCartStore";
+import { WishlistButton } from "@/modules/wishlist/components/WishlistButton";
 
 const MAX_THUMBS = 5;
 
@@ -24,10 +25,13 @@ const ProductDetailsPage = () => {
   const [searchParams] = useSearchParams();
   const { data: product, isLoading, isError } = useProductBySlug(slug);
   const { data: categories = [] } = useCategories();
+  const linked = product?.variants.find(
+    (v) => v.sku === searchParams.get("variant"),
+  );
   const { colors, colorImages, storages, activeVariant, optionStatus, select } =
     useVariantSelection(product, {
-      color: searchParams.get("color"),
-      storage: searchParams.get("storage"),
+      color: linked ? String(linked.attributes.color ?? "") || null : null,
+      storage: linked ? String(linked.attributes.storage ?? "") || null : null,
     });
   const [imageIndex, setImageIndex] = useState(0);
   const [descOpen, setDescOpen] = useState(false);
@@ -127,11 +131,17 @@ const ProductDetailsPage = () => {
       <div className="flex min-w-0 flex-col gap-4">
         {/* Card 1: basic */}
         <SurfaceCard>
-          <h1 className="text-xl font-bold">
-            {product.name}
-            {suffix}
-          </h1>
-
+          <div className="flex items-start justify-between gap-3">
+            <h1 className="text-xl font-bold">
+              {product.name}
+              {suffix}
+            </h1>
+            <WishlistButton
+              product={product}
+              variant={activeVariant}
+              className="shrink-0"
+            />
+          </div>
           <div className="mt-6 grid gap-6 md:grid-cols-[72px_minmax(0,1fr)_minmax(0,1fr)]">
             {images.length > 1 && (
               <div className="order-2 flex items-center gap-2 md:order-1 md:flex-col">

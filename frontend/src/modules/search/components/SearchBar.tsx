@@ -17,8 +17,11 @@ import { useCategories } from "@/modules/categories/hooks/useCategories";
 import { useProducts } from "@/modules/products/hooks/useProducts";
 import { useRecentSearches } from "../hooks/useRecentSearches";
 import { Highlight } from "./Highlight";
-import type { ProductVariant } from "@/modules/products/types";
-import { formatPrice, variantTitle } from "@/modules/products/utils";
+import {
+  formatPrice,
+  variantTitle,
+  variantUrl,
+} from "@/modules/products/utils";
 
 type Section = "history" | "suggestion" | "category" | "product";
 
@@ -35,14 +38,6 @@ const resultsUrl = (term: string) => "/shop?q=" + encodeURIComponent(term);
 const categoryUrl = (id: string) => "/shop?category=" + id;
 
 const MAX_RESULTS = 8;
-
-const variantUrl = (slug: string, v: ProductVariant) => {
-  const params = new URLSearchParams();
-  if (v.attributes.color) params.set("color", String(v.attributes.color));
-  if (v.attributes.storage) params.set("storage", String(v.attributes.storage));
-  const qs = params.toString();
-  return "/shop/" + slug + (qs ? "?" + qs : "");
-};
 
 const ROW_ICON = {
   suggestion: Search,
@@ -131,7 +126,7 @@ export const SearchBar = () => {
         id: "v-" + v.id,
         section: "product" as const,
         label: variantTitle(p, v),
-        to: variantUrl(p.slug, v),
+        to: variantUrl(p.slug, v.sku),
         image: v.images[0] ?? null,
         price: v.price,
       })),
