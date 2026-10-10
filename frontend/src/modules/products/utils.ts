@@ -3,6 +3,13 @@ import type { Product, ProductVariant } from "./types";
 export const formatPrice = (price: number) =>
   `$${price.toLocaleString("en-US")}`;
 
+export const variantTitle = (product: Product, v: ProductVariant) => {
+  const { ram, storage, color } = v.attributes;
+  const { screenSize, mainCamera } = product.attributes;
+  if (!ram || !storage) return product.name;
+  return `${product.name} ${ram}/${storage}GB/${screenSize ?? ""}/${mainCamera ?? ""} ${color ?? ""}`;
+};
+
 // Range across variants, single value when equal
 export const formatPriceRange = (product: Product) => {
   const prices = product.variants.map((v) => v.price);

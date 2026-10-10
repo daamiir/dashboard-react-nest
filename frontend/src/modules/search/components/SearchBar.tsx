@@ -8,26 +8,19 @@ import {
   type ReactNode,
 } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  ChevronRight,
-  FileText,
-  LayoutGrid,
-  Loader2,
-  Search,
-  X,
-} from "lucide-react";
+import { ChevronRight, LayoutGrid, Loader2, Search, X } from "lucide-react";
 import { cn } from "@/utils/cn";
 import { Button } from "@/components/ui/button";
 import { useDebounce } from "@/hooks/useDebounce";
 import { productImage } from "@/lib/image";
-import { useAuthStore } from "@/modules/auth/store/useAuthStore";
 import { useCategories } from "@/modules/categories/hooks/useCategories";
 import { useProducts } from "@/modules/products/hooks/useProducts";
-import { formatPrice } from "@/modules/products/utils";
 import { useRecentSearches } from "../hooks/useRecentSearches";
 import { Highlight } from "./Highlight";
+import type { ProductVariant } from "@/modules/products/types";
+import { formatPrice, variantTitle } from "@/modules/products/utils";
 
-type Section = "history" | "suggestion" | "category" | "page" | "product";
+type Section = "history" | "suggestion" | "category" | "product";
 
 interface Item {
   id: string;
@@ -41,15 +34,23 @@ interface Item {
 const resultsUrl = (term: string) => "/shop?q=" + encodeURIComponent(term);
 const categoryUrl = (id: string) => "/shop?category=" + id;
 
+const MAX_RESULTS = 8;
+
+const variantUrl = (slug: string, v: ProductVariant) => {
+  const params = new URLSearchParams();
+  if (v.attributes.color) params.set("color", String(v.attributes.color));
+  if (v.attributes.storage) params.set("storage", String(v.attributes.storage));
+  const qs = params.toString();
+  return "/shop/" + slug + (qs ? "?" + qs : "");
+};
+
 const ROW_ICON = {
   suggestion: Search,
   category: LayoutGrid,
-  page: FileText,
 } as const;
 
 export const SearchBar = () => {
   const navigate = useNavigate();
-  const token = useAuthStore((s) => s.token);
   const { items: recent, add, remove, clear } = useRecentSearches();
   const { data: categories = [] } = useCategories();
   const listId = useId();
@@ -64,7 +65,7 @@ export const SearchBar = () => {
   const term = query.trim();
   const lower = term.toLowerCase();
   const debounced = useDebounce(term, 300);
-
+  // Ignore the old debounced value right after typing starts or the box is cleared
   const effective = term ? debounced : "";
   const wantProducts = effective ? effective.length >= 2 : !term;
   const { data, isFetching } = useProducts(
@@ -72,10 +73,10 @@ export const SearchBar = () => {
     open && wantProducts,
   );
   const products = wantProducts ? (data?.data ?? []) : [];
-
+  // Spinner while debouncing or fetching
   const busy = term.length >= 2 && (term !== debounced || isFetching);
-  const noResults = !!term && wantProducts && !busy && products.length === 0;
 
+  // Query suggestions: matching brands and past searches
   const suggestionLabels = Array.from(
     new Set([
       ...products.map((p) => p.brand),
@@ -124,15 +125,22 @@ export const SearchBar = () => {
         })),
       ];
 
-  const right: Item[] = products.map((p) => ({
-    id: "pr-" + p.id,
-    section: "product" as const,
-    label: p.name,
-    to: "/shop/" + p.slug,
-    image: p.variants[0]?.images[0] ?? null,
-    price: p.variants[0]?.price,
-  }));
+  const right: Item[] = products
+    .flatMap((p) =>
+      p.variants.map((v) => ({
+        id: "v-" + v.id,
+        section: "product" as const,
+        label: variantTitle(p, v),
+        to: variantUrl(p.slug, v),
+        image: v.images[0] ?? null,
+        price: v.price,
+      })),
+    )
+    .slice(0, MAX_RESULTS);
 
+  const noResults = !!term && wantProducts && !busy && right.length === 0;
+
+  // Arrow keys move through the left column, then the right one
   const items = [...left, ...right];
   const of = (s: Section) => items.filter((i) => i.section === s);
   const showList = open && (!!term || items.length > 0);
@@ -184,6 +192,7 @@ export const SearchBar = () => {
     }
   };
 
+  // Close when clicking outside
   useEffect(() => {
     const onDown = (e: MouseEvent) => {
       if (!boxRef.current?.contains(e.target as Node)) {
@@ -195,6 +204,7 @@ export const SearchBar = () => {
     return () => document.removeEventListener("mousedown", onDown);
   }, []);
 
+  // Global hotkeys: Ctrl/Cmd + K, or "/" outside inputs
   useEffect(() => {
     const onKey = (e: globalThis.KeyboardEvent) => {
       const el = e.target as HTMLElement;
@@ -213,10 +223,12 @@ export const SearchBar = () => {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
+  // Focus the input when the mobile overlay opens
   useEffect(() => {
     if (mobileOpen) inputRef.current?.focus();
   }, [mobileOpen]);
 
+  // Lock page scroll while the mobile overlay is open
   useEffect(() => {
     if (!mobileOpen || window.matchMedia("(min-width: 768px)").matches) return;
     document.body.style.overflow = "hidden";
@@ -225,6 +237,7 @@ export const SearchBar = () => {
     };
   }, [mobileOpen]);
 
+  // Shared option attributes for keyboard and mouse
   const optionProps = (item: Item) => {
     const i = items.indexOf(item);
     return {
@@ -248,6 +261,7 @@ export const SearchBar = () => {
     </div>
   );
 
+  // Suggestion, category and page rows with an arrow
   const renderRow = (item: Item) => {
     const Icon = ROW_ICON[item.section as keyof typeof ROW_ICON];
     return (
@@ -268,6 +282,7 @@ export const SearchBar = () => {
     );
   };
 
+  // History and category chips for the empty state
   const renderChip = (item: Item) => (
     <div
       key={item.id}
@@ -326,6 +341,7 @@ export const SearchBar = () => {
 
   return (
     <div className="flex flex-1 justify-end md:justify-center md:px-6">
+      {/* Mobile trigger */}
       <Button
         variant="ghost"
         size="icon"
@@ -336,6 +352,7 @@ export const SearchBar = () => {
         <Search />
       </Button>
 
+      {/* Dim the page below the header */}
       {open && (
         <div
           aria-hidden
@@ -415,6 +432,7 @@ export const SearchBar = () => {
             role="listbox"
             className="fixed left-1/2 top-[4.25rem] z-50 grid max-h-[calc(100vh-5.5rem)] w-[min(64rem,calc(100vw-2rem))] -translate-x-1/2 overflow-y-auto rounded-xl border bg-popover shadow-lg md:grid-cols-[2fr_3fr] max-md:static max-md:mt-3 max-md:max-h-none max-md:w-full max-md:translate-x-0 max-md:border-0 max-md:shadow-none"
           >
+            {/* Left column */}
             <div className="p-4 md:border-r">
               {term ? (
                 <>
@@ -424,8 +442,6 @@ export const SearchBar = () => {
                   )}
                   {of("category").length > 0 &&
                     section("Categories", of("category").map(renderRow))}
-                  {of("page").length > 0 &&
-                    section("Pages", of("page").map(renderRow))}
                 </>
               ) : (
                 <>
@@ -455,6 +471,7 @@ export const SearchBar = () => {
               )}
             </div>
 
+            {/* Right column */}
             <div className="p-4">
               {section(
                 "Products",
@@ -462,7 +479,7 @@ export const SearchBar = () => {
                   <p className="px-2 py-3 text-sm text-muted-foreground">
                     {'No products found for "' + term + '"'}
                   </p>
-                ) : products.length === 0 && wantProducts ? (
+                ) : right.length === 0 && wantProducts ? (
                   <p className="px-2 py-3 text-sm text-muted-foreground">
                     Searching...
                   </p>
