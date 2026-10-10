@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -21,10 +21,14 @@ const MAX_THUMBS = 5;
 const ProductDetailsPage = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { data: product, isLoading, isError } = useProductBySlug(slug);
   const { data: categories = [] } = useCategories();
   const { colors, colorImages, storages, activeVariant, optionStatus, select } =
-    useVariantSelection(product);
+    useVariantSelection(product, {
+      color: searchParams.get("color"),
+      storage: searchParams.get("storage"),
+    });
   const [imageIndex, setImageIndex] = useState(0);
   const [descOpen, setDescOpen] = useState(false);
   const [specsOpen, setSpecsOpen] = useState(false);

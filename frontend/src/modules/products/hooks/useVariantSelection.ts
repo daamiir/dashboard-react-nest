@@ -2,9 +2,22 @@ import { useMemo, useState } from "react";
 import type { Product } from "../types";
 
 // Color/storage pickers and the resolved variant
-export function useVariantSelection(product?: Product) {
-  const [color, setColor] = useState<string | null>(null);
-  const [storage, setStorage] = useState<string | null>(null);
+export function useVariantSelection(
+  product?: Product,
+  initial?: { color?: string | null; storage?: string | null },
+) {
+  const initColor = initial?.color ?? null;
+  const initStorage = initial?.storage ?? null;
+  const [color, setColor] = useState<string | null>(initColor);
+  const [storage, setStorage] = useState<string | null>(initStorage);
+
+  const initKey = initColor + "|" + initStorage;
+  const [prevInitKey, setPrevInitKey] = useState(initKey);
+  if (prevInitKey !== initKey) {
+    setPrevInitKey(initKey);
+    setColor(initColor);
+    setStorage(initStorage);
+  }
 
   const variants = product?.variants ?? [];
 

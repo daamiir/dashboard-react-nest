@@ -16,11 +16,12 @@ import type { VariantFormValues } from "../schema";
 
 export const PRODUCTS_QUERY_KEY = ["products"] as const;
 
-export function useProducts(query: ProductQueryParams) {
+export function useProducts(query: ProductQueryParams, enabled = true) {
   return useQuery({
     queryKey: [...PRODUCTS_QUERY_KEY, query],
     queryFn: () => productsApi.getAll(query),
     placeholderData: keepPreviousData,
+    enabled,
   });
 }
 

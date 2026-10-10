@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useAuthStore } from "@/modules/auth/store/useAuthStore";
 import { Link } from "react-router-dom";
 import { ShoppingCart } from "lucide-react";
+import { SearchBar } from "@/modules/search/components/SearchBar";
 import {
   selectCartCount,
   useCartStore,
@@ -14,10 +15,11 @@ const Header = () => {
 
   return (
     <header className="sticky top-0 z-50 flex h-16 w-full items-center gap-4 border-b bg-card px-4 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
-      <div className="flex justify-between w-full">
+      <div className="flex w-full items-center justify-between">
         <h2 className="text-lg font-bold">
           <Link to="/">ElectronX</Link>
         </h2>
+        <SearchBar />
         <div className="flex items-center gap-2">
           <Button variant="ghost" size="icon" className="relative" asChild>
             <Link to="/cart" aria-label="Cart">
