@@ -139,3 +139,87 @@ input[type="number"]::-webkit-outer-spin-button {
 input[type="number"] {
   appearance: textfield;
 }
+
+/* Toasts */
+[data-sonner-toast][data-mounted="false"] {
+  --y: translateY(0) !important;
+}
+
+[data-sonner-toaster]
+  .cn-toast[data-sonner-toast]:not([data-swipe-out="true"]) {
+  --toast-accent: var(--muted-foreground);
+  background-image: linear-gradient(var(--toast-accent), var(--toast-accent));
+  background-repeat: no-repeat;
+  background-position: left bottom;
+  background-size: 100% 3px;
+  animation:
+    toast-in 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+    toast-bar var(--toast-duration, 4000ms) linear forwards !important;
+}
+
+[data-sonner-toaster]
+  .cn-toast[data-sonner-toast][data-removed="true"]:not(
+    [data-swipe-out="true"]
+  ) {
+  animation: toast-out 0.2s ease-in forwards !important;
+  background-size: 0% 3px;
+}
+@keyframes toast-in {
+  from {
+    translate: calc(100% + 24px) 0;
+    opacity: 0;
+  }
+  to {
+    translate: 0 0;
+    opacity: 1;
+  }
+}
+
+[data-sonner-toast][data-removed="true"]:not([data-swipe-out="true"]) {
+  --y: translateY(calc(var(--lift) * var(--offset))) !important;
+}
+
+@keyframes toast-out {
+  from {
+    translate: 0 0;
+    opacity: 1;
+  }
+  to {
+    translate: calc(100% + 24px) 0;
+    opacity: 0;
+  }
+}
+
+[data-sonner-toaster]:hover .cn-toast[data-sonner-toast],
+[data-sonner-toaster] .cn-toast[data-sonner-toast][data-swiping="true"] {
+  animation-play-state: running, paused !important;
+}
+@keyframes toast-bar {
+  from {
+    background-size: 100% 3px;
+  }
+  to {
+    background-size: 0% 3px;
+  }
+}
+
+[data-sonner-toaster] .cn-toast[data-sonner-toast][data-type="success"] {
+  --toast-accent: #22c55e;
+}
+[data-sonner-toaster] .cn-toast[data-sonner-toast][data-type="info"] {
+  --toast-accent: #3b82f6;
+}
+[data-sonner-toaster] .cn-toast[data-sonner-toast][data-type="warning"] {
+  --toast-accent: #f59e0b;
+}
+[data-sonner-toaster] .cn-toast[data-sonner-toast][data-type="error"] {
+  --toast-accent: #ef4444;
+}
+
+[data-sonner-toaster] .cn-toast[data-sonner-toast][data-type="loading"] {
+  background-image: none;
+}
+
+[data-sonner-toaster] .cn-toast[data-sonner-toast] [data-icon] {
+  color: var(--toast-accent);
+}
