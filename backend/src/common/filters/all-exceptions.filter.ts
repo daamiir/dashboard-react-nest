@@ -19,11 +19,18 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const ctx = host.switchToHttp();
 
     let httpStatus: number;
-    let message: string | object;
+    let message: string;
 
     if (exception instanceof HttpException) {
       httpStatus = exception.getStatus();
-      message = exception.getResponse();
+      const res = exception.getResponse();
+
+      const raw =
+        typeof res === 'string'
+          ? res
+          : ((res as { message?: string | string[] }).message ??
+            exception.message);
+      message = Array.isArray(raw) ? raw.join(', ') : raw;
     } else {
       this.logger.error(exception);
       httpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
