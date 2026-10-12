@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 
 const LoginPage = () => {
   const navigate = useNavigate();
-  const { mutate: login, error } = useLoginMutation();
+  const { mutate: login } = useLoginMutation();
 
   const methods = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -28,9 +28,6 @@ const LoginPage = () => {
           <div className="flex w-full max-w-sm flex-col gap-6">
             <div className="flex flex-col gap-6">
               <LoginForm />
-              {error && (
-                <p className="text-sm text-destructive">{error.message}</p>
-              )}
             </div>
           </div>
         </div>

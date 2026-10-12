@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { Minus, Plus, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { SurfaceCard } from "@/components/shared/SurfaceCard";
 import { formatPrice } from "@/modules/products/utils";
@@ -8,6 +9,7 @@ import {
   selectCartCount,
   selectCartTotal,
   useCartStore,
+  type CartItem,
 } from "@/modules/cart/store/useCartStore";
 
 const CartPage = () => {
@@ -16,6 +18,15 @@ const CartPage = () => {
   const total = useCartStore(selectCartTotal);
   const setQuantity = useCartStore((s) => s.setQuantity);
   const removeItem = useCartStore((s) => s.removeItem);
+  const addItem = useCartStore((s) => s.addItem);
+
+  const handleRemove = (item: CartItem) => {
+    removeItem(item.variantId);
+    const { quantity, ...rest } = item;
+    toast.info("Item removed from cart", {
+      action: { label: "Undo", onClick: () => addItem(rest, quantity) },
+    });
+  };
 
   if (items.length === 0) {
     return (
@@ -87,7 +98,7 @@ const CartPage = () => {
                     variant="ghost"
                     size="icon-sm"
                     className="ml-auto"
-                    onClick={() => removeItem(item.variantId)}
+                    onClick={() => handleRemove(item)}
                     aria-label="Remove item"
                   >
                     <Trash2 />

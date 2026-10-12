@@ -63,7 +63,7 @@ const AddProductPage = () => {
         (v) => Object.keys(validateSpecs(v.attributes, specs)).length > 0,
       );
     if (incomplete) {
-      toast.error("Fill color, RAM and storage for every variant");
+      toast.warning("Fill color, RAM and storage for every variant");
       return;
     }
 
@@ -80,7 +80,7 @@ const AddProductPage = () => {
 
   const onInvalid = (errors: FieldErrors<ProductFormInput>) => {
     console.error(errors);
-    toast.error("Some fields are invalid, check variants and images");
+    toast.warning("Some fields are invalid, check variants and images");
   };
 
   return (

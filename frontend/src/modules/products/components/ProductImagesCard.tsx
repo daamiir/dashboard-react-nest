@@ -17,6 +17,7 @@ import {
 import type { ProductFormValues } from "@/modules/products/schema";
 import { uploadImage } from "@/modules/products/api/uploads.api";
 import { ConfirmDialog } from "./ConfirmDialog";
+import { toast } from "sonner";
 
 type ImagesFieldName =
   | `variants.${number}.images`
@@ -52,11 +53,15 @@ export const ImageUploader = ({ name }: { name: ImagesFieldName }) => {
     if (!files?.length) return;
     setUploading(true);
     setError(null);
+    const id = toast.loading("Uploading images…");
     try {
       const urls = await Promise.all(Array.from(files).map(uploadImage));
       onChange([...current, ...urls]);
+      toast.success("Images uploaded", { id });
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Upload failed");
+      const msg = e instanceof Error ? e.message : "Upload failed";
+      setError(msg);
+      toast.error(msg, { id });
     } finally {
       setUploading(false);
     }

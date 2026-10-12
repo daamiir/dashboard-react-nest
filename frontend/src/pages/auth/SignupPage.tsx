@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 
 const SignupPage = () => {
   const navigate = useNavigate();
-  const { mutate: register, error } = useRegisterMutation();
+  const { mutate: register } = useRegisterMutation();
 
   const methods = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
@@ -28,9 +28,6 @@ const SignupPage = () => {
           <div className="flex w-full max-w-sm flex-col gap-6">
             <div className="flex flex-col gap-6">
               <SignupForm />
-              {error && (
-                <p className="text-sm text-destructive">{error.message}</p>
-              )}
             </div>
           </div>
         </div>

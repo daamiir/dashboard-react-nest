@@ -2,6 +2,7 @@ import { useEffect, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { authApi } from "../api/auth.api";
 import { useAuthStore } from "../store/useAuthStore";
+import { toast } from "sonner";
 
 interface AuthInitializerProps {
   children: ReactNode;
@@ -31,6 +32,7 @@ export const AuthInitializer = ({ children }: AuthInitializerProps) => {
   // Token is invalid/expired
   useEffect(() => {
     if (isError) {
+      toast.info("Session expired, log in again");
       logout();
     }
   }, [isError, logout]);

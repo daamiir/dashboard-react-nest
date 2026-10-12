@@ -12,8 +12,8 @@ export function useLoginMutation() {
       setAuth(data.user, data.accessToken);
       toast.success("Login successful");
     },
-    onError: () => {
-      toast.error("Login failed");
+    onError: (err: Error) => {
+      toast.error(err.message || "Login failed");
     },
   });
 }

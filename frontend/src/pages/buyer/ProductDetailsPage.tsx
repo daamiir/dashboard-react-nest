@@ -123,7 +123,12 @@ const ProductDetailsPage = () => {
       price: activeVariant.price,
       stockQuantity: activeVariant.stockQuantity,
     });
-    toast.success("Added to cart");
+    const action = { label: "View cart", onClick: () => navigate("/cart") };
+    if (inCart + 1 >= activeVariant.stockQuantity) {
+      toast.warning("Added to cart, max stock reached", { action });
+      return;
+    }
+    toast.success("Added to cart", { action });
   };
 
   return (

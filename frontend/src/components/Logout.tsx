@@ -3,6 +3,7 @@ import { useCartStore } from "@/modules/cart/store/useCartStore";
 import { LogOutIcon } from "lucide-react";
 import { Button } from "./ui/button";
 import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 const Logout = () => {
   const queryClient = useQueryClient();
@@ -13,6 +14,7 @@ const Logout = () => {
     queryClient.clear();
     clearCart();
     logout();
+    toast.success("Logged out successfully");
   };
 
   return (

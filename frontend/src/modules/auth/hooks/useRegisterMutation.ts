@@ -12,8 +12,8 @@ export function useRegisterMutation() {
       setAuth(data.user, data.accessToken);
       toast.success("Registration successful");
     },
-    onError: () => {
-      toast.error("Registration failed");
+    onError: (err: Error) => {
+      toast.error(err.message || "Registration failed");
     },
   });
 }

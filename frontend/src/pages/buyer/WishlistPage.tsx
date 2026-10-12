@@ -19,6 +19,17 @@ const WishlistPage = () => {
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   const handleBuy = (item: WishlistItem) => {
+    const inCart =
+      useCartStore.getState().items.find((i) => i.variantId === item.variantId)
+        ?.quantity ?? 0;
+    if (item.stockQuantity <= 0) {
+      toast.warning("Out of stock");
+      return;
+    }
+    if (inCart >= item.stockQuantity) {
+      toast.warning("Max stock reached");
+      return;
+    }
     addToCart({
       variantId: item.variantId,
       productId: item.productId,
@@ -124,7 +135,10 @@ const WishlistPage = () => {
         onOpenChange={setConfirmOpen}
         title="Clear wishlist"
         description="Remove all saved items from your wishlist?"
-        onConfirm={clear}
+        onConfirm={() => {
+          clear();
+          toast.info("Wishlist cleared");
+        }}
       />
     </SurfaceCard>
   );

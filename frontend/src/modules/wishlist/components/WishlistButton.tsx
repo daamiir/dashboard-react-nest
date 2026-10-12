@@ -31,7 +31,7 @@ export const WishlistButton = ({ product, variant, className }: Props) => {
         className,
       )}
       onClick={() => {
-        toggle({
+        const item = {
           variantId: variant.id,
           productId: product.id,
           slug: product.slug,
@@ -41,8 +41,15 @@ export const WishlistButton = ({ product, variant, className }: Props) => {
           image: variant.images[0] ?? null,
           price: variant.price,
           stockQuantity: variant.stockQuantity,
+        };
+        toggle(item);
+        if (!saved) {
+          toast.success("Added to wishlist");
+          return;
+        }
+        toast.info("Removed from wishlist", {
+          action: { label: "Undo", onClick: () => toggle(item) },
         });
-        toast.success(saved ? "Removed from wishlist" : "Added to wishlist");
       }}
     >
       <Heart className={cn(saved && "fill-current")} />
