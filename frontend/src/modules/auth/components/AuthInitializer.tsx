@@ -14,7 +14,7 @@ export const AuthInitializer = ({ children }: AuthInitializerProps) => {
   const setAuth = useAuthStore((s) => s.setAuth);
   const logout = useAuthStore((s) => s.logout);
 
-  const { data, isError, isFetching } = useQuery({
+  const { data, error, isError, isFetching } = useQuery({
     queryKey: ["auth", "me"],
     queryFn: () => authApi.me(token as string),
     enabled: !!token,
@@ -32,10 +32,14 @@ export const AuthInitializer = ({ children }: AuthInitializerProps) => {
   // Token is invalid/expired
   useEffect(() => {
     if (isError) {
-      toast.info("Session expired, log in again");
+      if (!(error instanceof TypeError)) {
+        toast.info("Session expired, log in again", {
+          id: "session-expired",
+        });
+      }
       logout();
     }
-  }, [isError, logout]);
+  }, [isError, error, logout]);
 
   if (token && !user && isFetching) {
     return (
