@@ -164,6 +164,15 @@ input[type="number"] {
   animation: toast-out 0.2s ease-in forwards !important;
   background-size: 0% 3px;
 }
+
+[data-sonner-toaster]
+  .cn-toast[data-sonner-toast][data-visible="false"]:not(
+    [data-swipe-out="true"]
+  ) {
+  animation: none !important;
+  opacity: 0 !important;
+  transition: none !important;
+}
 @keyframes toast-in {
   from {
     translate: calc(100% + 24px) 0;
