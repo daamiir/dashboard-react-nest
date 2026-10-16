@@ -1,5 +1,13 @@
 import { useState } from "react";
-import { Loader2, Plus, Trash2, UploadCloud, X } from "lucide-react";
+import {
+  GripVertical,
+  Loader2,
+  Pencil,
+  Plus,
+  Trash2,
+  UploadCloud,
+  X,
+} from "lucide-react";
 import { cn } from "@/utils/cn";
 import { Input } from "@/components/ui/input";
 import { CollapseToggle } from "./CollapseToggle";
@@ -181,6 +189,10 @@ export const ProductImagesCard = () => {
   const [clearColor, setClearColor] = useState<string | null>(null);
   const [newColor, setNewColor] = useState<string | null>(null);
   const [open, setOpen] = useState(true);
+  const [dragColor, setDragColor] = useState<string | null>(null);
+  const [overColor, setOverColor] = useState<string | null>(null);
+  const [name, setName] = useState("");
+  const [nameError, setNameError] = useState("");
 
   const variantColors = variants
     .map((v) => String(v.attributes?.color ?? "").trim())
@@ -199,6 +211,8 @@ export const ProductImagesCard = () => {
     if (!colorImages.some((ci) => ci.color === color))
       setValue("colorImages", [...colorImages, { color, images: [] }]);
     setSnapshot(colorImages.find((ci) => ci.color === color)?.images ?? []);
+    setName(color);
+    setNameError("");
     setOpenColor(color);
   };
   const cancel = () => {
@@ -231,6 +245,64 @@ export const ProductImagesCard = () => {
     openEditor(existing ?? name);
   };
 
+  const moveColor = (from: string, to: string) => {
+    if (from === to) return;
+    const order = [...colors];
+    const fromIdx = order.indexOf(from);
+    const toIdx = order.indexOf(to);
+    const [moved] = order.splice(fromIdx, 1);
+    order.splice(toIdx, 0, moved);
+    const rank = (c: string) => {
+      const i = order.indexOf(c.trim());
+      return i === -1 ? order.length : i;
+    };
+    setValue(
+      "variants",
+      [...variants].sort(
+        (a, b) =>
+          rank(String(a.attributes?.color ?? "")) -
+          rank(String(b.attributes?.color ?? "")),
+      ),
+      { shouldDirty: true },
+    );
+    setValue(
+      "colorImages",
+      [...colorImages].sort((a, b) => rank(a.color) - rank(b.color)),
+      { shouldDirty: true },
+    );
+  };
+
+  const applyRename = (from: string, to: string) => {
+    setValue(
+      "variants",
+      variants.map((v) =>
+        String(v.attributes?.color ?? "").trim() === from
+          ? { ...v, attributes: { ...v.attributes, color: to } }
+          : v,
+      ),
+      { shouldDirty: true },
+    );
+    setValue(
+      "colorImages",
+      colorImages.map((c) => (c.color === from ? { ...c, color: to } : c)),
+      { shouldDirty: true },
+    );
+  };
+
+  const save = () => {
+    if (!openColor) return;
+    const to = name.trim();
+    if (!to) return setNameError("Enter a color name");
+    if (
+      colors.some(
+        (c) => c !== openColor && c.toLowerCase() === to.toLowerCase(),
+      )
+    )
+      return setNameError("This color already exists");
+    if (to !== openColor) applyRename(openColor, to);
+    setOpenColor(null);
+  };
+
   return (
     <Card className="px-6 py-4 sm:px-6 rounded-2xl bg-white p-4 sm:p-6 dark:border-gray-800 dark:bg-white/3">
       <CardHeader className="flex flex-row items-center justify-between">
@@ -261,13 +333,33 @@ export const ProductImagesCard = () => {
             return (
               <div
                 key={color}
-                className="flex items-center gap-1 pr-2 hover:bg-muted/50"
+                draggable
+                onDragStart={(e) => {
+                  e.dataTransfer.setData("text/plain", color);
+                  setDragColor(color);
+                }}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  if (dragColor) setOverColor(color);
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  if (dragColor) moveColor(dragColor, color);
+                  setDragColor(null);
+                  setOverColor(null);
+                }}
+                onDragEnd={() => {
+                  setDragColor(null);
+                  setOverColor(null);
+                }}
+                className={cn(
+                  "flex items-center gap-1 pr-2 hover:bg-muted/50 cursor-grab active:cursor-grabbing",
+                  dragColor === color && "opacity-40",
+                  overColor === color && dragColor !== color && "bg-muted",
+                )}
               >
-                <button
-                  type="button"
-                  onClick={() => openEditor(color)}
-                  className="flex flex-1 items-center gap-3 p-3 text-left"
-                >
+                <GripVertical className="ml-2 h-4 w-4 shrink-0 text-muted-foreground" />
+                <div className="flex flex-1 items-center gap-3 p-3 text-left">
                   {images[0] ? (
                     <img
                       src={images[0]}
@@ -286,7 +378,15 @@ export const ProductImagesCard = () => {
                   <span className="text-xs text-muted-foreground">
                     {images.length} images
                   </span>
-                </button>
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => openEditor(color)}
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
                 <Button
                   type="button"
                   variant="ghost"
@@ -304,17 +404,36 @@ export const ProductImagesCard = () => {
         <Dialog open={idx !== -1} onOpenChange={(o) => !o && cancel()}>
           <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-xl">
             <DialogHeader>
-              <DialogTitle>{openColor} images</DialogTitle>
+              <DialogTitle>Edit color</DialogTitle>
               <DialogDescription>
                 Shared by all variants of this color
               </DialogDescription>
             </DialogHeader>
+            <div className="space-y-1">
+              <Input
+                placeholder="Color name"
+                value={name}
+                onChange={(e) => {
+                  setNameError("");
+                  setName(e.target.value);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    save();
+                  }
+                }}
+              />
+              {nameError && (
+                <p className="text-sm text-destructive">{nameError}</p>
+              )}
+            </div>
             {idx !== -1 && <ImageUploader name={`colorImages.${idx}.images`} />}
             <DialogFooter className="sticky bottom-0">
               <Button type="button" variant="outline" onClick={cancel}>
                 Cancel
               </Button>
-              <Button type="button" onClick={() => setOpenColor(null)}>
+              <Button type="button" onClick={save}>
                 Save
               </Button>
             </DialogFooter>
