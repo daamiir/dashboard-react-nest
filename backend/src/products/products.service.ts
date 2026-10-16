@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  ConflictException,
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
@@ -22,6 +23,9 @@ const PRODUCT_INCLUDE = {
 type ProductWithImages = Prisma.ProductGetPayload<{
   include: typeof PRODUCT_INCLUDE;
 }>;
+
+const SLUG_EMPTY_MESSAGE =
+  'Slug cannot be generated from this name. Enter one manually';
 
 @Injectable()
 export class ProductsService {
@@ -160,8 +164,31 @@ export class ProductsService {
     return this.withImages(product);
   }
 
+  private async assertSlugAvailable(slug: string, excludeId?: string) {
+    const conflict = await this.prisma.product.findFirst({
+      where: {
+        slug: slug,
+        ...(excludeId && { id: { not: excludeId } }),
+      },
+      select: { id: true },
+    });
+    if (conflict) {
+      throw new ConflictException(
+        'A product with this name or slug already exists',
+      );
+    }
+  }
+
   async create(createProductDto: CreateProductDto, adminId: string) {
-    const { variants, colorImages, ...productData } = createProductDto;
+    const {
+      variants,
+      colorImages,
+      slug: manualSlug,
+      ...productData
+    } = createProductDto;
+    const slug = manualSlug ?? generateSlug(productData.name);
+    if (!slug) throw new BadRequestException(SLUG_EMPTY_MESSAGE);
+    await this.assertSlugAvailable(slug);
 
     // Fill in SKUs before validation/slug generation, since both depend on it
     const variantsWithSku = await Promise.all(
@@ -182,7 +209,7 @@ export class ProductsService {
     const created = await this.prisma.product.create({
       data: {
         ...productData,
-        slug: generateSlug(productData.name),
+        slug,
         createdById: adminId,
         variants: {
           create: variantsWithSku.map((v, position) => ({ ...v, position })),
@@ -201,7 +228,7 @@ export class ProductsService {
     });
     if (!existing) throw new NotFoundException('Product not found');
 
-    const { variants, colorImages, ...productData } = updateProductDto;
+    const { variants, colorImages, slug, ...productData } = updateProductDto;
 
     // Fill in SKUs for any new variants (no id) before validation/slug/transaction
     const variantsWithSku = variants
@@ -213,11 +240,17 @@ export class ProductsService {
         )
       : undefined;
 
-    // Regenerate slug only if name changed, so unrelated saves keep the URL stable
-    const slugUpdate =
+    const autoSlug =
       productData.name && productData.name !== existing.name
-        ? { slug: generateSlug(productData.name) }
-        : {};
+        ? generateSlug(productData.name)
+        : undefined;
+    const nextSlug = slug ?? autoSlug;
+    if (nextSlug === '') throw new BadRequestException(SLUG_EMPTY_MESSAGE);
+    let slugUpdate: { slug?: string } = {};
+    if (nextSlug && nextSlug !== existing.slug) {
+      await this.assertSlugAvailable(nextSlug, id);
+      slugUpdate = { slug: nextSlug };
+    }
 
     if (variantsWithSku) {
       const productAttributes =

@@ -13,6 +13,7 @@ export type CreateProductPayload = Omit<
   Product,
   "id" | "slug" | "createdAt" | "createdById" | "variants"
 > & {
+  slug?: string;
   variants: (Omit<ProductVariant, "id" | "sku" | "ownImages"> & {
     sku?: string;
   })[];

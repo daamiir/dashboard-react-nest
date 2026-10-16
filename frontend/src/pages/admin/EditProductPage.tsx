@@ -23,6 +23,7 @@ import {
   type ProductFormValues,
 } from "@/modules/products/schema";
 import { buildAttributesSchema } from "@/modules/products/config/build-attributes-schema";
+import { generateSlug } from "@/modules/products/utils/slugify";
 
 const EditProductPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -35,6 +36,8 @@ const EditProductPage = () => {
     resolver: zodResolver(productSchema),
     defaultValues: {
       name: "",
+      slug: "",
+      customSlug: false,
       categoryId: "",
       brand: "",
       description: "",
@@ -50,6 +53,8 @@ const EditProductPage = () => {
     if (!product) return;
     methods.reset({
       name: product.name,
+      slug: product.slug,
+      customSlug: product.slug !== generateSlug(product.name),
       categoryId: product.categoryId,
       brand: product.brand,
       description: product.description,
@@ -97,8 +102,10 @@ const EditProductPage = () => {
       return;
     }
 
+    const { customSlug, slug, ...rest } = data;
     const payload = {
-      ...data,
+      ...rest,
+      slug: customSlug ? slug : undefined,
       attributes: attributesResult.data,
       colorImages: pruneColorImages(data),
     };
@@ -141,6 +148,7 @@ const EditProductPage = () => {
 
             <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3">
               <Button
+                type="button"
                 variant="outline"
                 className="w-full sm:w-auto"
                 onClick={() => navigate("/admin/products")}

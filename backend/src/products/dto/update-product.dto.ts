@@ -9,6 +9,7 @@ import {
   ValidateNested,
   ArrayMinSize,
   IsOptional,
+  Matches,
 } from 'class-validator';
 import { UpdateVariantDto } from './update-variant.dto';
 import { ColorImagesDto } from './color-images.dto';
@@ -19,6 +20,14 @@ export class UpdateProductDto {
   @IsString()
   @IsNotEmpty()
   name?: string;
+
+  @IsOptional()
+  @IsString()
+  @Matches(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, {
+    message:
+      'Slug must contain only lowercase latin letters, numbers, and hyphens',
+  })
+  slug?: string;
 
   @IsOptional()
   @IsString()

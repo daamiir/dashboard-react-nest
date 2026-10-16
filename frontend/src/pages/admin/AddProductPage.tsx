@@ -29,6 +29,8 @@ const AddProductPage = () => {
     resolver: zodResolver(productSchema),
     defaultValues: {
       name: "",
+      slug: "",
+      customSlug: false,
       categoryId: "",
       brand: "",
       description: "",
@@ -67,8 +69,10 @@ const AddProductPage = () => {
       return;
     }
 
+    const { customSlug, slug, ...rest } = data;
     const payload = {
-      ...data,
+      ...rest,
+      slug: customSlug ? slug : undefined,
       attributes: attributesResult.data,
       colorImages: pruneColorImages(data),
     };
@@ -104,6 +108,7 @@ const AddProductPage = () => {
 
             <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3">
               <Button
+                type="button"
                 variant="outline"
                 className="w-full sm:w-auto"
                 onClick={() => navigate("/admin/products")}

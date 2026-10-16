@@ -21,6 +21,8 @@ import {
   type SpecField,
 } from "@/modules/products/config/category-specs.config";
 import { useCategories } from "@/modules/categories/hooks/useCategories";
+import { generateSlug } from "../utils/slugify";
+import { ConfirmDialog } from "./ConfirmDialog";
 
 const SpecFieldInput = ({ field }: { field: SpecField }) => {
   const { register, control, formState } = useFormContext();
@@ -101,8 +103,17 @@ const SpecFieldInput = ({ field }: { field: SpecField }) => {
 
 export const ProductDescriptionCard = () => {
   const [open, setOpen] = useState(true);
-  const { register, control } = useFormContext<ProductFormValues>();
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const { register, control, setValue, getValues } =
+    useFormContext<ProductFormValues>();
   const categoryId = useWatch({ control, name: "categoryId" });
+  const customSlug = useWatch({ control, name: "customSlug" });
+  const name = useWatch({ control, name: "name" });
+  const slug = useWatch({ control, name: "slug" });
+
+  const autoSlug = generateSlug(name ?? "");
+  const isManual = !!customSlug && slug !== autoSlug;
+
   const { data: categories = [] } = useCategories();
 
   const selectedCategory = categories.find((c) => c.id === categoryId);
@@ -115,6 +126,24 @@ export const ProductDescriptionCard = () => {
     value: c.id,
   }));
 
+  const applyAutoSlug = () => {
+    setValue("customSlug", false);
+    setValue("slug", "");
+  };
+
+  const handleCustomSlugChange = (checked: boolean) => {
+    if (checked) {
+      setValue("customSlug", true);
+      if (!getValues("slug")) setValue("slug", autoSlug);
+      return;
+    }
+    if (isManual) {
+      setConfirmOpen(true);
+      return;
+    }
+    applyAutoSlug();
+  };
+
   return (
     <Card className="px-4 py-4 sm:px-6 rounded-2xl bg-white p-4 sm:p-6 dark:border-gray-800 dark:bg-white/3">
       <CardHeader>
@@ -124,12 +153,49 @@ export const ProductDescriptionCard = () => {
         </div>
       </CardHeader>
       <CardContent className={cn("pt-6 space-y-6", !open && "hidden")}>
+        <FormInput
+          name="name"
+          label="Product Name"
+          placeholder="e.g. Apple iPhone 17 Pro"
+        />
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <Controller
+              name="customSlug"
+              control={control}
+              render={({ field: f }) => (
+                <Checkbox
+                  id="customSlug"
+                  checked={!!f.value}
+                  onCheckedChange={(v) => handleCustomSlugChange(!!v)}
+                />
+              )}
+            />
+            <Label htmlFor="customSlug" className="font-normal">
+              Custom slug
+            </Label>
+          </div>
+          {customSlug && (
+            <div className="space-y-1">
+              <FormInput
+                name="slug"
+                label="Slug"
+                placeholder="e.g. apple-iphone-17-pro"
+              />
+            </div>
+          )}
+        </div>
+
+        <ConfirmDialog
+          open={confirmOpen}
+          onOpenChange={setConfirmOpen}
+          title="Use generated slug?"
+          description="The slug you entered will be replaced by one generated from the product name."
+          confirmLabel="Confirm"
+          onConfirm={applyAutoSlug}
+        />
+
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-          <FormInput
-            name="name"
-            label="Product Name"
-            placeholder="e.g. Apple iPhone 17 Pro"
-          />
           {categories.length > 0 && (
             <FormSelect
               name="categoryId"
@@ -137,13 +203,12 @@ export const ProductDescriptionCard = () => {
               options={categoryOptions}
             />
           )}
+          <FormInput
+            name="brand"
+            label="Brand"
+            placeholder="e.g. Apple, Samsung, Xiaomi"
+          />
         </div>
-
-        <FormInput
-          name="brand"
-          label="Brand"
-          placeholder="e.g. Apple, Samsung, Xiaomi"
-        />
 
         <div className="space-y-2">
           <Label htmlFor="description">Description</Label>

@@ -16,12 +16,14 @@ export const ConfirmDialog = ({
   title,
   description,
   onConfirm,
+  confirmLabel = "Delete",
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   title: string;
   description: string;
   onConfirm: () => void;
+  confirmLabel?: string;
 }) => (
   <AlertDialog open={open} onOpenChange={onOpenChange}>
     <AlertDialogContent>
@@ -31,7 +33,9 @@ export const ConfirmDialog = ({
       </AlertDialogHeader>
       <AlertDialogFooter>
         <AlertDialogCancel>Cancel</AlertDialogCancel>
-        <AlertDialogAction onClick={onConfirm}>Delete</AlertDialogAction>
+        <AlertDialogAction onClick={onConfirm}>
+          {confirmLabel}
+        </AlertDialogAction>
       </AlertDialogFooter>
     </AlertDialogContent>
   </AlertDialog>
