@@ -232,3 +232,17 @@ input[type="number"] {
 [data-sonner-toaster] .cn-toast[data-sonner-toast] [data-icon] {
   color: var(--toast-accent);
 }
+
+/* Hide scrollbars in all dialogs/modals */
+[data-slot="dialog-content"],
+[data-slot="alert-dialog-content"],
+[data-slot="sheet-content"] {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* old Edge/IE */
+}
+
+[data-slot="dialog-content"]::-webkit-scrollbar,
+[data-slot="alert-dialog-content"]::-webkit-scrollbar,
+[data-slot="sheet-content"]::-webkit-scrollbar {
+  display: none; /* Chrome, Edge, Safari */
+}
