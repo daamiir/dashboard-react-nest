@@ -164,7 +164,7 @@ const ProductsPage = () => {
   });
 
   const products = data?.data ?? [];
-  const total = data?.meta.total ?? 0;
+  const totalVariants = data?.meta.totalVariants ?? 0;
   const totalPages = data?.meta.totalPages ?? 1;
 
   // One tile per variant
@@ -270,7 +270,7 @@ const ProductsPage = () => {
           </h1>
           {!isLoading && !isError && (
             <p className="mt-1 text-sm text-muted-foreground">
-              Found {total} products
+              Found {totalVariants} products
             </p>
           )}
         </div>

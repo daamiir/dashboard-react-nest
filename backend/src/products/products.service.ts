@@ -120,11 +120,7 @@ export class ProductsService {
     const where = await this.buildWhere(query);
     const orderBy = this.buildOrderBy(query);
 
-    // TODO: total show all variants, not products
-    // NOTE: admin side also use findAll
-
-    // Pagination counts Products, not Variants
-    const [data, total] = await Promise.all([
+    const [data, total, totalVariants] = await Promise.all([
       this.prisma.product.findMany({
         where,
         orderBy,
@@ -133,12 +129,14 @@ export class ProductsService {
         include: PRODUCT_INCLUDE,
       }),
       this.prisma.product.count({ where }),
+      this.prisma.productVariant.count({ where: { product: where } }),
     ]);
 
     return {
       data: data.map((p) => this.withImages(p)),
       meta: {
         total,
+        totalVariants,
         page: page!,
         limit: limit!,
         totalPages: Math.ceil(total / limit!),

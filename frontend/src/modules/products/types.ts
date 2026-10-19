@@ -49,6 +49,7 @@ export interface ProductQueryParams {
 
 export interface PaginationMeta {
   total: number;
+  totalVariants: number;
   page: number;
   limit: number;
   totalPages: number;
