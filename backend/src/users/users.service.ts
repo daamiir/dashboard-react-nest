@@ -14,6 +14,13 @@ export class UsersService {
     return this.prisma.user.findUnique({ where: { email } });
   }
 
+  findById(id: string) {
+    return this.prisma.user.findUnique({
+      where: { id },
+      select: { id: true, name: true, email: true, role: true },
+    });
+  }
+
   async create(dto: RegisterDto) {
     const existing = await this.findByEmail(dto.email);
     if (existing) throw new ConflictException('Email already registered');

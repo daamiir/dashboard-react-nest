@@ -2,11 +2,14 @@ import { GuestRoute } from "@/components/GuestRoute";
 import AppLayout from "@/components/layout/admin/AppLayout";
 import BuyerLayout from "@/components/layout/buyer/BuyerLayout";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { ProfileLayout } from "@/modules/profile/components/ProfileLayout";
 import { lazy, Suspense } from "react";
 import { Routes, Route } from "react-router-dom";
 
 const SignupPage = lazy(() => import("@/pages/auth/SignupPage"));
 const LoginPage = lazy(() => import("@/pages/auth/LoginPage"));
+
+const ProfilePage = lazy(() => import("@/pages/shared/ProfilePage"));
 
 const LandingPage = lazy(() => import("@/pages/buyer/LandingPage"));
 const ProductsPage = lazy(() => import("@/pages/buyer/ProductsPage"));
@@ -48,6 +51,12 @@ export function AppRoutes() {
           {/* Buyer: protected routes */}
           <Route element={<ProtectedRoute allowedRoles={["BUYER", "ADMIN"]} />}>
             <Route path="/checkout" element={<div>Checkout Page</div>} />
+            <Route
+              path="/profile"
+              element={<ProfileLayout profilePath="/profile" />}
+            >
+              <Route index element={<ProfilePage />} />
+            </Route>
           </Route>
         </Route>
 
@@ -62,6 +71,12 @@ export function AppRoutes() {
               path="/admin/products/edit/:id"
               element={<EditProductPage />}
             />
+            <Route
+              path="/admin/profile"
+              element={<ProfileLayout profilePath="/admin/profile" />}
+            >
+              <Route index element={<ProfilePage />} />
+            </Route>
           </Route>
         </Route>
 

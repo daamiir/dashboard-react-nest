@@ -12,6 +12,12 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
+  async me(userId: string) {
+    const user = await this.usersService.findById(userId);
+    if (!user) throw new UnauthorizedException();
+    return user;
+  }
+
   private signToken(user: { id: string; email: string; role: string }) {
     return this.jwtService.sign({
       sub: user.id,

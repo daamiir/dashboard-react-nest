@@ -12,6 +12,7 @@ import {
   selectCartCount,
   useCartStore,
 } from "@/modules/cart/store/useCartStore";
+import { UserMenuButton } from "@/modules/profile/components/UserMenuButton";
 
 const Header = () => {
   const token = useAuthStore((state) => state.token);
@@ -47,7 +48,10 @@ const Header = () => {
             </Link>
           </Button>
           {token ? (
-            <Logout />
+            <>
+              <UserMenuButton to="/profile" />
+              <Logout />
+            </>
           ) : (
             <>
               <Button variant="outline" asChild>

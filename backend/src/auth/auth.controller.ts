@@ -21,7 +21,7 @@ export class AuthController {
 
   @Get('me')
   @UseGuards(JwtAuthGuard)
-  me(@CurrentUser() user: { id: string; email: string; role: string }) {
-    return user;
+  me(@CurrentUser() user: { id: string }) {
+    return this.authService.me(user.id);
   }
 }

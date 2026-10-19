@@ -1,6 +1,7 @@
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { ModeToggle } from "@/components/ui/mode-toggle";
 import Logout from "@/components/Logout";
+import { UserMenuButton } from "@/modules/profile/components/UserMenuButton";
 
 const Header = () => {
   return (
@@ -9,6 +10,7 @@ const Header = () => {
         <SidebarTrigger className="-ml-1" />
         <div className="flex items-center gap-2">
           <ModeToggle />
+          <UserMenuButton to="/admin/profile" />
           <Logout />
         </div>
       </div>
