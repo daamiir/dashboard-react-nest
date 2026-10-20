@@ -18,16 +18,17 @@ const prettifySlug = (slug: string) => {
 
 const buildCrumbs = (pathname: string): Crumb[] => {
   const crumbs: Crumb[] = [{ label: "Home", to: "/" }];
-  const [section, slug] = pathname.split("/").filter(Boolean);
+  const parts = pathname.split("/").filter(Boolean);
+  const [section, slug] = parts;
 
-  if (section === "shop") {
+  if (section === "shop" && parts.length <= 2) {
     crumbs.push({ label: "Shop", to: "/shop" });
     if (slug) crumbs.push({ label: prettifySlug(slug) });
-  } else if (section === "cart") {
+  } else if (parts.length === 1 && section === "cart") {
     crumbs.push({ label: "Cart" });
-  } else if (section === "wishlist") {
+  } else if (parts.length === 1 && section === "wishlist") {
     crumbs.push({ label: "Wishlist" });
-  } else if (section === "checkout") {
+  } else if (parts.length === 1 && section === "checkout") {
     crumbs.push({ label: "Checkout" });
   }
 

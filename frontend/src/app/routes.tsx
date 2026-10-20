@@ -42,6 +42,7 @@ export function AppRoutes() {
 
         {/* Buyer: public browsing */}
         <Route element={<BuyerLayout />}>
+          <Route path="*" element={<NotFoundPage />} />
           <Route path="/" element={<LandingPage />} />
           <Route path="/shop" element={<ProductsPage />} />
           <Route path="/shop/:slug" element={<ProductDetailsPage />} />
@@ -63,6 +64,7 @@ export function AppRoutes() {
         {/* Admin: protected routes */}
         <Route element={<ProtectedRoute allowedRoles={["ADMIN"]} />}>
           <Route element={<AppLayout />}>
+            <Route path="/admin/*" element={<NotFoundPage />} />
             <Route path="/admin" element={<DashboardPage />} />
             <Route path="/admin/products" element={<ProductsAdminPage />} />
             <Route path="/admin/categories" element={<CategoriesPage />} />
@@ -79,9 +81,6 @@ export function AppRoutes() {
             </Route>
           </Route>
         </Route>
-
-        {/* Fallback 404 */}
-        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </Suspense>
   );
