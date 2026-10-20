@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/utils/cn";
 import { CollapseToggle } from "./CollapseToggle";
-import { ConfirmDialog } from "./ConfirmDialog";
+import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import {
   Dialog,
   DialogContent,
@@ -28,8 +28,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { ImageUploader } from "./ProductImagesCard";
-import { FormInput } from "@/modules/auth/components/FormInput";
-import { FormStepper } from "./FormStepper";
+import { FormInput } from "@/components/form/FormInput";
+import { FormStepper } from "@/components/form/FormStepper";
 import { Label } from "@/components/ui/label";
 import { useCategories } from "@/modules/categories/hooks/useCategories";
 import type { ProductFormValues } from "@/modules/products/schema";

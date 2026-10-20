@@ -3,7 +3,7 @@ import { Minus, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { SurfaceCard } from "@/components/shared/SurfaceCard";
-import { formatPrice } from "@/modules/products/utils";
+import { formatPrice } from "@/lib/format";
 import { productImage } from "@/lib/image";
 import {
   selectCartCount,

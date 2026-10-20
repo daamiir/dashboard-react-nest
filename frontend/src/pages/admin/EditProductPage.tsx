@@ -28,7 +28,7 @@ import {
   type ProductFormValues,
 } from "@/modules/products/schema";
 import { buildAttributesSchema } from "@/modules/products/config/build-attributes-schema";
-import { generateSlug } from "@/modules/products/utils/slugify";
+import { generateSlug } from "@/lib/slugify";
 
 const EditProductPage = () => {
   const { id } = useParams<{ id: string }>();

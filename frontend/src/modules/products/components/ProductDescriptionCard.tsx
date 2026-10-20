@@ -13,16 +13,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { FormInput } from "@/modules/auth/components/FormInput";
-import { FormSelect } from "@/modules/products/components/FormSelect";
+import { FormInput } from "@/components/form/FormInput";
+import { FormSelect } from "@/components/form/FormSelect";
 import type { ProductFormValues } from "@/modules/products/schema";
 import {
   CATEGORY_SPECS,
   type SpecField,
 } from "@/modules/products/config/category-specs.config";
 import { useCategories } from "@/modules/categories/hooks/useCategories";
-import { generateSlug } from "../utils/slugify";
-import { ConfirmDialog } from "./ConfirmDialog";
+import { generateSlug } from "@/lib/slugify";
+import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 
 const SpecFieldInput = ({ field }: { field: SpecField }) => {
   const { register, control, formState } = useFormContext();

@@ -16,7 +16,8 @@ import {
 import { SurfaceCard } from "@/components/shared/SurfaceCard";
 import { useProducts } from "@/modules/products/hooks/useProducts";
 import { useCategories } from "@/modules/categories/hooks/useCategories";
-import { formatPrice, formatVariantLabel } from "@/modules/products/utils";
+import { formatPrice } from "@/lib/format";
+import { formatVariantLabel } from "@/modules/products/utils";
 import { useDebounce } from "@/hooks/useDebounce";
 import { cn } from "@/utils/cn";
 import type { Product, ProductVariant } from "@/modules/products/types";

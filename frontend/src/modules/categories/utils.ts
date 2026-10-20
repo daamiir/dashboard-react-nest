@@ -32,10 +32,3 @@ export function getDescendantIds(list: Category[], id: string): string[] {
   }
   return ids;
 }
-
-export const slugify = (value: string) =>
-  value
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");

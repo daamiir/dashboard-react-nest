@@ -1,13 +1,7 @@
-import { ApiError } from "@/lib/errors";
+import { handleResponse } from "@/lib/api-client";
 import type { User } from "../types";
 
 const BASE_URL = `${import.meta.env.VITE_API_URL}/auth`;
-
-interface ApiEnvelope<T> {
-  success: boolean;
-  timestamp: string;
-  data: T;
-}
 
 export interface RegisterUserPayload {
   name: string;
@@ -23,18 +17,6 @@ export interface LoginUserPayload {
 export interface ResponseUser {
   accessToken: string;
   user: User;
-}
-
-async function handleResponse<T>(res: Response): Promise<ApiEnvelope<T>> {
-  if (!res.ok) {
-    const body = await res.json().catch(() => null);
-    throw new ApiError(
-      typeof body?.message === "string" ? body.message : "",
-      res.status,
-    );
-  }
-
-  return res.json();
 }
 
 export const authApi = {

@@ -1,7 +1,7 @@
 import { FormProvider, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
-import { FormPasswordInput } from "./FormPasswordInput";
+import { FormPasswordInput } from "@/components/form/FormPasswordInput";
 import { useChangePassword } from "../hooks/useProfile";
 import { passwordSchema, type PasswordValues } from "../schema";
 

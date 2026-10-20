@@ -17,11 +17,8 @@ import { useCategories } from "@/modules/categories/hooks/useCategories";
 import { useProducts } from "@/modules/products/hooks/useProducts";
 import { useRecentSearches } from "../hooks/useRecentSearches";
 import { Highlight } from "./Highlight";
-import {
-  formatPrice,
-  variantTitle,
-  variantUrl,
-} from "@/modules/products/utils";
+import { formatPrice } from "@/lib/format";
+import { variantTitle, variantUrl } from "@/modules/products/utils";
 
 type Section = "history" | "suggestion" | "category" | "product";
 

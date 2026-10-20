@@ -11,7 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ConfirmDialog } from "@/modules/products/components/ConfirmDialog";
+import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import type { Category } from "../types";
 import { useCategories, useDeleteCategory } from "../hooks/useCategories";
 import { flattenCategories } from "../utils";

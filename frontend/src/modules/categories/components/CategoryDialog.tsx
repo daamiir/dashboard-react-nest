@@ -22,7 +22,8 @@ import {
 import type { Category } from "../types";
 import { categorySchema, type CategoryFormValues } from "../schema";
 import { useCreateCategory, useUpdateCategory } from "../hooks/useCategories";
-import { flattenCategories, getDescendantIds, slugify } from "../utils";
+import { flattenCategories, getDescendantIds } from "../utils";
+import { generateSlug } from "@/lib/slugify";
 
 // Select needs a non-empty value for "no parent"
 const NONE = "none";
@@ -99,7 +100,7 @@ export const CategoryDialog = ({
                 // Auto-fill slug on create until it is edited by hand
                 onChange: (e) => {
                   if (!isEdit && !dirtyFields.slug) {
-                    setValue("slug", slugify(e.target.value));
+                    setValue("slug", generateSlug(e.target.value));
                   }
                 },
               })}

@@ -1,7 +1,5 @@
+import { formatPrice } from "@/lib/format";
 import type { Product, ProductVariant } from "./types";
-
-export const formatPrice = (price: number) =>
-  `$${price.toLocaleString("en-US")}`;
 
 export const variantUrl = (slug: string, sku: string) =>
   "/shop/" + slug + "?variant=" + encodeURIComponent(sku);

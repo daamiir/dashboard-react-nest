@@ -1,7 +1,7 @@
 import { FormProvider, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
-import { FormInput } from "@/modules/auth/components/FormInput";
+import { FormInput } from "@/components/form/FormInput";
 import { useAuthStore } from "@/modules/auth/store/useAuthStore";
 import { useUpdateProfile } from "../hooks/useProfile";
 import { profileSchema, type ProfileValues } from "../schema";

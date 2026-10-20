@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/dialog";
 import type { ProductFormValues } from "@/modules/products/schema";
 import { uploadImage } from "@/modules/products/api/uploads.api";
-import { ConfirmDialog } from "./ConfirmDialog";
+import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/errors";
 

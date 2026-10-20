@@ -10,7 +10,7 @@ import { useProductBySlug } from "@/modules/products/hooks/useProducts";
 import { useVariantSelection } from "@/modules/products/hooks/useVariantSelection";
 import { useCategories } from "@/modules/categories/hooks/useCategories";
 import { CATEGORY_SPECS } from "@/modules/products/config/category-specs.config";
-import { formatPrice } from "@/modules/products/utils";
+import { formatPrice } from "@/lib/format";
 import { productImage } from "@/lib/image";
 import { cn } from "@/utils/cn";
 import { toast } from "sonner";

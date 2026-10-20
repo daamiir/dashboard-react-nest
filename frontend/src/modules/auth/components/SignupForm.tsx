@@ -5,7 +5,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { FormInput } from "./FormInput";
+import { FormInput } from "@/components/form/FormInput";
 import { Button } from "@/components/ui/button";
 import { Field, FieldDescription, FieldGroup } from "@/components/ui/field";
 import { Link } from "react-router-dom";
