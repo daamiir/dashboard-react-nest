@@ -8,12 +8,13 @@ import { BrowserRouter } from "react-router-dom";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthInitializer } from "@/modules/auth/components/AuthInitializer";
 import { toast } from "sonner";
+import { NETWORK_ERROR_MESSAGE } from "@/lib/errors";
 
 const queryClient = new QueryClient({
   queryCache: new QueryCache({
     onError: (err) => {
       if (err instanceof TypeError) {
-        toast.error("Network error, check your connection", {
+        toast.error(NETWORK_ERROR_MESSAGE, {
           id: "network-error",
         });
       }

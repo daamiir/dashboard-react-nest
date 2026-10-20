@@ -22,6 +22,7 @@ import { cn } from "@/utils/cn";
 import type { Product, ProductVariant } from "@/modules/products/types";
 import { productImage } from "@/lib/image";
 import { WishlistButton } from "@/modules/wishlist/components/WishlistButton";
+import { ErrorState } from "@/components/shared/ErrorState";
 
 const RAM_OPTIONS = [4, 6, 8, 12, 16];
 const STORAGE_OPTIONS = [64, 128, 256, 512, 1024];
@@ -153,7 +154,7 @@ const ProductsPage = () => {
   const debouncedMin = useDebounce(minPrice, 400);
   const debouncedMax = useDebounce(maxPrice, 400);
 
-  const { data, isLoading, isError } = useProducts({
+  const { data, isLoading, isError, refetch } = useProducts({
     categoryId,
     minPrice: debouncedMin ? Number(debouncedMin) : undefined,
     maxPrice: debouncedMax ? Number(debouncedMax) : undefined,
@@ -282,9 +283,7 @@ const ProductsPage = () => {
             ))}
 
           {isError && (
-            <p className="col-span-full py-10 text-center text-sm text-destructive">
-              Couldn't load products. Is the backend running?
-            </p>
+            <ErrorState className="col-span-full" onRetry={() => refetch()} />
           )}
 
           {!isLoading && !isError && tiles.length === 0 && (

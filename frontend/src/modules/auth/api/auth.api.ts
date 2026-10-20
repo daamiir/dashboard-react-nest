@@ -1,3 +1,4 @@
+import { ApiError } from "@/lib/errors";
 import type { User } from "../types";
 
 const BASE_URL = `${import.meta.env.VITE_API_URL}/auth`;
@@ -27,8 +28,9 @@ export interface ResponseUser {
 async function handleResponse<T>(res: Response): Promise<ApiEnvelope<T>> {
   if (!res.ok) {
     const body = await res.json().catch(() => null);
-    throw new Error(
-      body?.message ?? `Request failed with status ${res.status}`,
+    throw new ApiError(
+      typeof body?.message === "string" ? body.message : "",
+      res.status,
     );
   }
 

@@ -5,6 +5,7 @@ import {
   type UpdateCategoryPayload,
 } from "../api/categories.api";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/errors";
 
 export const CATEGORIES_QUERY_KEY = ["categories"] as const;
 
@@ -33,7 +34,7 @@ export function useCreateCategory() {
       toast.success("Category created");
     },
     onError: (err: Error) =>
-      toast.error(err.message || "Failed to create category"),
+      toast.error(getErrorMessage(err, "Failed to create category")),
   });
 }
 
@@ -52,7 +53,7 @@ export function useUpdateCategory() {
       toast.success("Category updated");
     },
     onError: (err: Error) =>
-      toast.error(err.message || "Failed to update category"),
+      toast.error(getErrorMessage(err, "Failed to update category")),
   });
 }
 
@@ -65,6 +66,6 @@ export function useDeleteCategory() {
       toast.success("Category deleted");
     },
     onError: (err: Error) =>
-      toast.error(err.message || "Failed to delete category"),
+      toast.error(getErrorMessage(err, "Failed to delete category")),
   });
 }

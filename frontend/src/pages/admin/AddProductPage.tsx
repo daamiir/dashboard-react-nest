@@ -1,5 +1,10 @@
 import { useNavigate } from "react-router-dom";
-import { useForm, FormProvider, type FieldErrors } from "react-hook-form";
+import {
+  useForm,
+  FormProvider,
+  type FieldErrors,
+  type FieldPath,
+} from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -50,9 +55,10 @@ const AddProductPage = () => {
     ).safeParse(data.attributes);
     if (!attributesResult.success) {
       attributesResult.error.issues.forEach((issue) => {
-        methods.setError(`attributes.${issue.path.join(".")}` as any, {
-          message: issue.message,
-        });
+        methods.setError(
+          `attributes.${issue.path.join(".")}` as FieldPath<ProductFormInput>,
+          { message: issue.message },
+        );
       });
       return;
     }
@@ -101,8 +107,7 @@ const AddProductPage = () => {
 
             {createProduct.isError && (
               <p className="text-sm text-destructive">
-                Couldn't save the product. Check the backend is running and try
-                again.
+                Couldn't save the product. Try again.
               </p>
             )}
 

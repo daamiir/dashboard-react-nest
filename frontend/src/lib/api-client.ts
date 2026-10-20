@@ -1,5 +1,6 @@
 import { useAuthStore } from "@/modules/auth/store/useAuthStore";
 import type { PaginationMeta } from "@/modules/products/types";
+import { ApiError } from "./errors";
 
 export interface ApiEnvelope<T> {
   success: boolean;
@@ -14,8 +15,9 @@ export async function handleResponse<T>(
 ): Promise<ApiEnvelope<T>> {
   if (!res.ok) {
     const body = await res.json().catch(() => null);
-    throw new Error(
-      body?.message ?? `Request failed with status ${res.status}`,
+    throw new ApiError(
+      typeof body?.message === "string" ? body.message : "",
+      res.status,
     );
   }
   return res.json();

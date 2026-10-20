@@ -26,6 +26,7 @@ import type { ProductFormValues } from "@/modules/products/schema";
 import { uploadImage } from "@/modules/products/api/uploads.api";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/errors";
 
 type ImagesFieldName =
   | `variants.${number}.images`
@@ -67,7 +68,7 @@ export const ImageUploader = ({ name }: { name: ImagesFieldName }) => {
       onChange([...current, ...urls]);
       toast.success("Images uploaded", { id });
     } catch (e) {
-      const msg = e instanceof Error ? e.message : "Upload failed";
+      const msg = getErrorMessage(e, "Couldn't upload the images. Try again.");
       setError(msg);
       toast.error(msg, { id });
     } finally {

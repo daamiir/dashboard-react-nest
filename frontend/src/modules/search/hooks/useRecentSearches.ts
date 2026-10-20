@@ -15,7 +15,9 @@ const read = (): string[] => {
 const write = (list: string[]) => {
   try {
     localStorage.setItem(KEY, JSON.stringify(list));
-  } catch {}
+  } catch {
+    // Storage may be unavailable
+  }
 };
 
 export function useRecentSearches() {

@@ -33,40 +33,18 @@ import { FormStepper } from "./FormStepper";
 import { Label } from "@/components/ui/label";
 import { useCategories } from "@/modules/categories/hooks/useCategories";
 import type { ProductFormValues } from "@/modules/products/schema";
-
-export const VARIANT_SPECS: Record<string, { key: string; label: string }[]> = {
-  smartphone: [
-    { key: "color", label: "Color" },
-    { key: "ram", label: "RAM (GB)" },
-    { key: "storage", label: "Storage (GB)" },
-  ],
-};
-
-type Spec = { key: string; label: string };
+import {
+  VARIANT_SPECS,
+  validateSpecs,
+  type Spec,
+  type Errors,
+} from "../variantSpecs";
 
 // Compact row title: color, RAM, storage
 const variantLabel = (a: Record<string, unknown> = {}) =>
   [a.color, a.ram && `${a.ram}GB`, a.storage && `${a.storage}GB`]
     .filter(Boolean)
     .join(" \u00b7 ") || "New variant";
-
-type Errors = Record<string, string>;
-
-// Every spec must be filled: non-empty color, positive RAM and storage
-export const validateSpecs = (
-  a: Record<string, unknown> = {},
-  specs: Spec[],
-) => {
-  const errors: Errors = {};
-  if (specs.length === 0) errors._ = "Select a category first";
-  for (const s of specs) {
-    const v = a[s.key];
-    const ok =
-      s.key === "color" ? String(v ?? "").trim() !== "" : Number(v) > 0;
-    if (!ok) errors[s.key] = `${s.label.split(" (")[0]} is required`;
-  }
-  return errors;
-};
 
 const inputCls =
   "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs outline-none focus-visible:ring-1 focus-visible:ring-ring";

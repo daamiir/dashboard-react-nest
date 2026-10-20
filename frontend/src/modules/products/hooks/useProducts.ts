@@ -13,6 +13,7 @@ import {
 import { toast } from "sonner";
 import type { ProductQueryParams } from "../types";
 import type { VariantFormValues } from "../schema";
+import { getErrorMessage } from "@/lib/errors";
 
 export const PRODUCTS_QUERY_KEY = ["products"] as const;
 
@@ -50,7 +51,7 @@ export function useCreateProduct() {
       toast.success("Product created");
     },
     onError: (err: Error) =>
-      toast.error(err.message || "Failed to create product"),
+      toast.error(getErrorMessage(err, "Failed to create product")),
   });
 }
 
@@ -69,7 +70,7 @@ export function useUpdateProduct() {
       toast.success("Product updated");
     },
     onError: (err: Error) =>
-      toast.error(err.message || "Failed to update product"),
+      toast.error(getErrorMessage(err, "Failed to update product")),
   });
 }
 
@@ -82,7 +83,7 @@ export function useDeleteProduct() {
       toast.success("Product deleted");
     },
     onError: (err: Error) =>
-      toast.error(err.message || "Failed to delete product"),
+      toast.error(getErrorMessage(err, "Failed to delete product")),
   });
 }
 export function useAddVariant() {
@@ -100,7 +101,7 @@ export function useAddVariant() {
       toast.success("Variant added");
     },
     onError: (err: Error) =>
-      toast.error(err.message || "Failed to add variant"),
+      toast.error(getErrorMessage(err, "Failed to add variant")),
   });
 }
 
@@ -121,7 +122,7 @@ export function useUpdateVariant() {
       toast.success("Variant updated");
     },
     onError: (err: Error) =>
-      toast.error(err.message || "Failed to update variant"),
+      toast.error(getErrorMessage(err, "Failed to update variant")),
   });
 }
 
@@ -140,6 +141,6 @@ export function useDeleteVariant() {
       toast.success("Variant deleted");
     },
     onError: (err: Error) =>
-      toast.error(err.message || "Failed to delete variant"),
+      toast.error(getErrorMessage(err, "Failed to delete variant")),
   });
 }

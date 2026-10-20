@@ -2,6 +2,7 @@ import { useMutation } from "@tanstack/react-query";
 import { authApi } from "../api/auth.api";
 import { useAuthStore } from "../store/useAuthStore";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/errors";
 
 export function useRegisterMutation() {
   const setAuth = useAuthStore((state) => state.setAuth);
@@ -13,7 +14,7 @@ export function useRegisterMutation() {
       toast.success("Registration successful");
     },
     onError: (err: Error) => {
-      toast.error(err.message || "Registration failed");
+      toast.error(getErrorMessage(err, "Registration failed. Try again."));
     },
   });
 }

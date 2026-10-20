@@ -1,5 +1,9 @@
 import { useMemo, useState } from "react";
-import type { Product } from "../types";
+import type { Product, ProductVariant } from "../types";
+
+const inStock = (v: ProductVariant) => v.stockQuantity > 0;
+const attr = (v: ProductVariant, k: "color" | "storage") =>
+  v.attributes[k] ? String(v.attributes[k]) : "";
 
 // Color/storage pickers and the resolved variant
 export function useVariantSelection(
@@ -19,7 +23,7 @@ export function useVariantSelection(
     setStorage(initStorage);
   }
 
-  const variants = product?.variants ?? [];
+  const variants = useMemo(() => product?.variants ?? [], [product?.variants]);
 
   const colors = useMemo(
     () => [
@@ -43,10 +47,6 @@ export function useVariantSelection(
       ].sort((a, b) => Number(a) - Number(b)),
     [variants],
   );
-
-  const inStock = (v: (typeof variants)[number]) => v.stockQuantity > 0;
-  const attr = (v: (typeof variants)[number], k: "color" | "storage") =>
-    v.attributes[k] ? String(v.attributes[k]) : "";
 
   const activeVariant = useMemo(() => {
     const matches = variants.filter(

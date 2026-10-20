@@ -2,6 +2,7 @@ import { useMutation } from "@tanstack/react-query";
 import { authApi } from "../api/auth.api";
 import { useAuthStore } from "../store/useAuthStore";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/errors";
 
 export function useLoginMutation() {
   const setAuth = useAuthStore((state) => state.setAuth);
@@ -13,7 +14,7 @@ export function useLoginMutation() {
       toast.success("Login successful");
     },
     onError: (err: Error) => {
-      toast.error(err.message || "Login failed");
+      toast.error(getErrorMessage(err, "Login failed. Try again."));
     },
   });
 }

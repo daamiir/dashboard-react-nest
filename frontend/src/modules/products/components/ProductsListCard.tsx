@@ -30,6 +30,7 @@ import { useProducts } from "../hooks/useProducts";
 import type { SortBy, SortOrder } from "../types";
 import { ProductRow } from "./ProductRow";
 import { ProductMobileCard } from "./ProductMobileCard";
+import { ErrorState } from "@/components/shared/ErrorState";
 
 const PAGE_SIZE = 7;
 const LIMIT_OPTIONS = [5, 10, 20];
@@ -52,7 +53,7 @@ export const ProductsListCard = () => {
 
   const query = { search: debouncedSearch, sortBy, sortOrder, page, limit };
 
-  const { data: response, isLoading, isError } = useProducts(query);
+  const { data: response, isLoading, isError, refetch } = useProducts(query);
 
   const pageProducts = response?.data ?? [];
   const totalPages = response?.meta.totalPages ?? 1;
@@ -223,11 +224,8 @@ export const ProductsListCard = () => {
 
               {isError && (
                 <TableRow>
-                  <TableCell
-                    colSpan={8}
-                    className="py-10 text-center text-destructive"
-                  >
-                    Couldn't load products. Is the backend running?
+                  <TableCell colSpan={8} className="text-center">
+                    <ErrorState onRetry={() => refetch()} />
                   </TableCell>
                 </TableRow>
               )}

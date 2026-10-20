@@ -1,6 +1,11 @@
 import { useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useForm, FormProvider, type FieldErrors } from "react-hook-form";
+import {
+  useForm,
+  FormProvider,
+  type FieldErrors,
+  type FieldPath,
+} from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -83,9 +88,10 @@ const EditProductPage = () => {
     ).safeParse(data.attributes);
     if (!attributesResult.success) {
       attributesResult.error.issues.forEach((issue) => {
-        methods.setError(`attributes.${issue.path.join(".")}` as any, {
-          message: issue.message,
-        });
+        methods.setError(
+          `attributes.${issue.path.join(".")}` as FieldPath<ProductFormInput>,
+          { message: issue.message },
+        );
       });
       return;
     }
