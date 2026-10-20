@@ -120,17 +120,39 @@ export class ProductsService {
     const where = await this.buildWhere(query);
     const orderBy = this.buildOrderBy(query);
 
-    const [data, total, totalVariants] = await Promise.all([
+    const priceOrder = (
+      orderBy as { variants?: { _min?: { price?: 'asc' | 'desc' } } }
+    ).variants?._min?.price;
+    const priceIds = priceOrder
+      ? (
+          await this.prisma.productVariant.groupBy({
+            by: ['productId'],
+            where: { product: where },
+            _min: { price: true },
+            orderBy: [{ _min: { price: priceOrder } }, { productId: 'asc' }],
+            skip,
+            take: limit,
+          })
+        ).map((r) => r.productId)
+      : undefined;
+
+    const [rows, total, totalVariants] = await Promise.all([
       this.prisma.product.findMany({
-        where,
-        orderBy,
-        skip,
-        take: limit,
+        where: priceIds ? { id: { in: priceIds } } : where,
+        orderBy: priceIds ? undefined : orderBy,
+        skip: priceIds ? undefined : skip,
+        take: priceIds ? undefined : limit,
         include: PRODUCT_INCLUDE,
       }),
       this.prisma.product.count({ where }),
       this.prisma.productVariant.count({ where: { product: where } }),
     ]);
+
+    const data = priceIds
+      ? [...rows].sort(
+          (a, b) => priceIds.indexOf(a.id) - priceIds.indexOf(b.id),
+        )
+      : rows;
 
     return {
       data: data.map((p) => this.withImages(p)),
