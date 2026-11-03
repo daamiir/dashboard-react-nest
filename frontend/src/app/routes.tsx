@@ -4,7 +4,7 @@ import BuyerLayout from "@/components/layout/buyer/BuyerLayout";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ProfileLayout } from "@/modules/profile/components/ProfileLayout";
 import { lazy, Suspense } from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 
 const SignupPage = lazy(() => import("@/pages/auth/SignupPage"));
 const LoginPage = lazy(() => import("@/pages/auth/LoginPage"));
@@ -37,12 +37,10 @@ export function AppRoutes() {
           <Route path="/signup" element={<SignupPage />} />
         </Route>
 
-        {/* Public routes */}
-        <Route path="/unauthorized" element={<div>Access Denied</div>} />
-
         {/* Buyer: public browsing */}
         <Route element={<BuyerLayout />}>
-          <Route path="*" element={<NotFoundPage />} />
+          <Route path="404" element={<NotFoundPage />} />
+          <Route path="*" element={<Navigate to="/404" replace />} />
           <Route path="/" element={<LandingPage />} />
           <Route path="/shop" element={<ProductsPage />} />
           <Route path="/shop/:slug" element={<ProductDetailsPage />} />
@@ -62,7 +60,11 @@ export function AppRoutes() {
         </Route>
 
         {/* Admin: protected routes */}
-        <Route element={<ProtectedRoute allowedRoles={["ADMIN"]} />}>
+        <Route
+          element={
+            <ProtectedRoute allowedRoles={["ADMIN"]} redirectTo="/404" />
+          }
+        >
           <Route element={<AppLayout />}>
             <Route path="/admin/*" element={<NotFoundPage />} />
             <Route path="/admin" element={<DashboardPage />} />

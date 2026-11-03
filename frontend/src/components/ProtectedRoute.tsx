@@ -19,9 +19,8 @@ export const ProtectedRoute = ({
     return <Navigate to={redirectTo} state={{ from: location }} replace />;
   }
 
-  // Role check failed -> Redirect to unauthorized route
   if (allowedRoles && !allowedRoles.includes(user.role)) {
-    return <Navigate to="/unauthorized" replace />;
+    return <Navigate to="/404" replace />;
   }
 
   return <Outlet />;
