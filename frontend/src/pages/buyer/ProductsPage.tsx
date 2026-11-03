@@ -63,7 +63,7 @@ const FilterGroup = ({
 );
 
 // One tile per variant in the listing grid
-const ProductCard = ({
+export const ProductCard = ({
   product,
   variant,
   onOpen,
