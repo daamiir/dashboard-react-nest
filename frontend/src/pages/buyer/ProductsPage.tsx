@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -76,6 +76,15 @@ export const ProductCard = ({
   const images = variant.images.slice(0, 5);
   const [index, setIndex] = useState(0);
   const label = formatVariantLabel(variant);
+  const preloaded = useRef(false);
+
+  const preload = () => {
+    if (preloaded.current) return;
+    preloaded.current = true;
+    images.forEach((img) => {
+      new Image().src = productImage(img, { width: 600 });
+    });
+  };
 
   const handleMove = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -95,6 +104,7 @@ export const ProductCard = ({
       className="group flex flex-col rounded-2xl bg-white p-3 text-left transition-shadow hover:shadow-md"
     >
       <div
+        onMouseEnter={preload}
         onMouseMove={handleMove}
         onMouseLeave={() => setIndex(0)}
         className="relative aspect-square cursor-grab overflow-hidden rounded-xl active:cursor-grabbing"
