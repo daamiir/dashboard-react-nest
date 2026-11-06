@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { SurfaceCard } from "@/components/shared/SurfaceCard";
-import { SpecRow } from "@/components/shared/SpecRow";
 import { useProductBySlug } from "@/modules/products/hooks/useProducts";
 import { useVariantSelection } from "@/modules/products/hooks/useVariantSelection";
 import { useCategories } from "@/modules/categories/hooks/useCategories";
@@ -17,7 +16,10 @@ import { toast } from "sonner";
 import { useCartStore } from "@/modules/cart/store/useCartStore";
 import { WishlistButton } from "@/modules/wishlist/components/WishlistButton";
 
+// TODO: Need new design for product details page, this is just a temporary layout
+
 const MAX_THUMBS = 5;
+const HIGHLIGHT_KEYS = ["screenSize", "processor", "battery", "mainCamera"];
 
 const ProductDetailsPage = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -92,8 +94,41 @@ const ProductDetailsPage = () => {
             ? "Yes"
             : "No"
           : `${v}${f.unit ? ` ${f.unit}` : ""}`;
-      return { label: f.label, value };
+      return { key: f.key, label: f.label, value, group: f.group ?? "General" };
     });
+
+  const memory: typeof specs = [];
+  if (ram)
+    memory.push({
+      key: "ram",
+      label: "RAM, GB",
+      value: String(ram),
+      group: "Memory",
+    });
+  if (storage)
+    memory.push({
+      key: "storage",
+      label: "Storage, GB",
+      value: String(storage),
+      group: "Memory",
+    });
+
+  const at = specs.findIndex((s) => s.group === "Dimensions");
+  const allSpecs =
+    at === -1
+      ? [...specs, ...memory]
+      : [...specs.slice(0, at), ...memory, ...specs.slice(at)];
+
+  const groups = allSpecs.reduce<{ title: string; rows: typeof allSpecs }[]>(
+    (acc, s) => {
+      const g = acc.find((x) => x.title === s.group);
+      if (g) g.rows.push(s);
+      else acc.push({ title: s.group, rows: [s] });
+      return acc;
+    },
+    [],
+  );
+  const highlights = allSpecs.filter((s) => HIGHLIGHT_KEYS.includes(s.key));
 
   const images = activeVariant.images.length
     ? activeVariant.images
@@ -221,14 +256,9 @@ const ProductDetailsPage = () => {
                   onSelect={(s) => select("storage", s)}
                 />
               )}
-              {specs.length > 0 && (
-                <div>
-                  <div className="mb-1 text-sm font-semibold">
-                    Characteristics
-                  </div>
-                  {specs.slice(0, 4).map((s) => (
-                    <SpecRow key={s.label} {...s} />
-                  ))}
+              {highlights.length > 0 && (
+                <div className="mb-1 text-sm font-semibold">
+                  Characteristics
                 </div>
               )}
             </div>
@@ -258,13 +288,13 @@ const ProductDetailsPage = () => {
         </SurfaceCard>
 
         {/* Card 3: characteristics */}
-        {specs.length > 0 && (
+        {groups.length > 0 && (
           <SurfaceCard>
             <h2 className="mb-4 text-xl font-bold">Characteristics</h2>
-            {(specsOpen ? specs : specs.slice(0, 8)).map((s) => (
-              <SpecRow key={s.label} {...s} />
+            {(specsOpen ? groups : groups.slice(0, 3)).map((g) => (
+              <SpecGroup key={g.title} title={g.title} rows={g.rows} />
             ))}
-            {specs.length > 8 && (
+            {groups.length > 3 && (
               <ToggleLink
                 open={specsOpen}
                 onToggle={() => setSpecsOpen((v) => !v)}
@@ -397,6 +427,27 @@ const ColorPicker = ({
             o
           )}
         </button>
+      ))}
+    </div>
+  </div>
+);
+
+const SpecGroup = ({
+  title,
+  rows,
+}: {
+  title: string;
+  rows: { label: string; value: string }[];
+}) => (
+  <div className="grid gap-2 border-t border-[#f4f4f4] py-4 first-of-type:border-t-0 first-of-type:pt-0 sm:grid-cols-[220px_minmax(0,1fr)]">
+    <h3 className="text-sm font-bold text-gray-700">{title}</h3>
+    <div className="space-y-2">
+      {rows.map((r) => (
+        <div key={r.label} className="flex items-baseline gap-2 text-sm">
+          <span> {r.label}</span>
+          <span className="flex-1 border-b-2 border-dotted border-[#c0c5c9]" />
+          <span className="text-right">{r.value}</span>
+        </div>
       ))}
     </div>
   </div>

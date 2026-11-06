@@ -4,6 +4,7 @@ export interface SpecField {
   key: string;
   label: string;
   type: FieldType;
+  group?: string;
   required?: boolean;
   options?: string[]; // for select fields
   unit?: string; // unit of measurement (GB, in, mAh, etc.)
@@ -14,46 +15,177 @@ export const CATEGORY_SPECS: Record<string, SpecField[]> = {
   // 1. SMARTPHONES
   smartphone: [
     {
-      key: "screenSize",
-      label: "Screen Size",
+      key: "cpuFrequency",
+      label: "Frequency, GHz",
       type: "number",
-      unit: "in",
-      required: true,
+      group: "Processor",
     },
-    {
-      key: "screenType",
-      label: "Display Type",
-      type: "select",
-      options: ["AMOLED", "OLED", "IPS"],
-      required: true,
-    },
-    { key: "refreshRate", label: "Refresh Rate", type: "number", unit: "Hz" },
-    { key: "processor", label: "Processor", type: "text", required: true },
-    {
-      key: "battery",
-      label: "Battery Capacity",
-      type: "number",
-      unit: "mAh",
-    },
-    { key: "mainCamera", label: "Main Camera", type: "number", unit: "MP" },
-    { key: "frontCamera", label: "Front Camera", type: "number", unit: "MP" },
     {
       key: "os",
       label: "Operating System",
-      type: "select",
-      options: ["iOS", "Android"],
+      type: "text",
       required: true,
+      group: "Processor",
+    },
+    {
+      key: "processorBrand",
+      label: "Processor Manufacturer",
+      type: "text",
+      group: "Processor",
+    },
+    {
+      key: "processor",
+      label: "Processor Model",
+      type: "text",
+      required: true,
+      group: "Processor",
+    },
+    {
+      key: "cpuCores",
+      label: "Number of Cores",
+      type: "number",
+      group: "Processor",
+    },
+
+    {
+      key: "simCount",
+      label: "Number of SIM Cards",
+      type: "number",
+      group: "SIM Card",
     },
     {
       key: "simType",
-      label: "SIM Type",
+      label: "SIM Card Size",
       type: "select",
       options: ["Nano-SIM", "Dual SIM", "eSIM + Nano-SIM"],
+      group: "SIM Card",
     },
-    { key: "weight", label: "Weight", type: "number", unit: "g" },
-    { key: "has5G", label: "5G Support", type: "boolean" },
-    { key: "hasNfc", label: "NFC Support", type: "boolean" },
-    { key: "eSimSupport", label: "eSIM Support", type: "boolean" },
+
+    {
+      key: "resolution",
+      label: "Display Resolution",
+      type: "text",
+      group: "Display",
+    },
+    {
+      key: "screenSize",
+      label: "Display Diagonal, in",
+      type: "number",
+      required: true,
+      group: "Display",
+    },
+    {
+      key: "refreshRate",
+      label: "Refresh Rate",
+      type: "number",
+      unit: "Hz",
+      group: "Display",
+    },
+    {
+      key: "screenType",
+      label: "Matrix Type",
+      type: "select",
+      options: ["AMOLED", "OLED", "IPS"],
+      required: true,
+      group: "Display",
+    },
+
+    {
+      key: "battery",
+      label: "Battery Capacity, mAh",
+      type: "number",
+      group: "Power",
+    },
+
+    {
+      key: "autofocus",
+      label: "Autofocus",
+      type: "boolean",
+      group: "Main Camera",
+    },
+    {
+      key: "flash",
+      label: "Built-in Flash",
+      type: "boolean",
+      group: "Main Camera",
+    },
+    {
+      key: "stabilizationType",
+      label: "Stabilization Method",
+      type: "select",
+      options: ["Optical", "Digital", "Optical + Digital"],
+      group: "Main Camera",
+    },
+    {
+      key: "stabilization",
+      label: "Stabilization",
+      type: "boolean",
+      group: "Main Camera",
+    },
+    {
+      key: "mainCamera",
+      label: "Number of Megapixels",
+      type: "number",
+      group: "Main Camera",
+    },
+
+    {
+      key: "port",
+      label: "Connectors",
+      type: "select",
+      options: ["USB Type-C", "Lightning"],
+      group: "Connectivity",
+    },
+    {
+      key: "interfaces",
+      label: "Interfaces",
+      type: "text",
+      group: "Connectivity",
+    },
+    {
+      key: "networkStandard",
+      label: "Network Standard",
+      type: "select",
+      options: ["4G", "5G"],
+      group: "Connectivity",
+    },
+
+    {
+      key: "series",
+      label: "Series",
+      type: "text",
+      group: "Basic Specifications",
+    },
+    {
+      key: "package",
+      label: "Package Contents",
+      type: "text",
+      group: "Basic Specifications",
+    },
+    {
+      key: "modelYear",
+      label: "Model Year",
+      type: "number",
+      group: "Basic Specifications",
+    },
+
+    { key: "height", label: "Height, mm", type: "number", group: "Dimensions" },
+    { key: "width", label: "Width, mm", type: "number", group: "Dimensions" },
+    {
+      key: "thickness",
+      label: "Thickness, mm",
+      type: "number",
+      group: "Dimensions",
+    },
+    { key: "weight", label: "Weight, g", type: "number", group: "Dimensions" },
+
+    {
+      key: "bodyMaterial",
+      label: "Body Material",
+      type: "select",
+      options: ["Glass", "Metal", "Plastic", "Ceramic"],
+      group: "Features and Options",
+    },
   ],
 
   // 2. TABLETS
