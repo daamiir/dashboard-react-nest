@@ -24,6 +24,8 @@ import {
   type ProductFormValues,
 } from "@/modules/products/schema";
 import { buildAttributesSchema } from "@/modules/products/config/build-attributes-schema";
+import { useFormChanges, useUnsavedChanges } from "@/hooks/useUnsavedChanges";
+import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 
 const AddProductPage = () => {
   const navigate = useNavigate();
@@ -44,6 +46,9 @@ const AddProductPage = () => {
       colorImages: [],
     },
   });
+
+  const { changed } = useFormChanges(methods);
+  const { bypass, requestLeave, leaveDialog } = useUnsavedChanges(changed);
 
   const onSubmit = (data: ProductFormValues) => {
     // attributes are validated separately against the schema built for
@@ -84,7 +89,10 @@ const AddProductPage = () => {
     };
 
     createProduct.mutate(payload, {
-      onSuccess: () => navigate("/admin/products"),
+      onSuccess: () => {
+        bypass.current = true;
+        navigate("/admin/products");
+      },
     });
   };
 
@@ -116,7 +124,7 @@ const AddProductPage = () => {
                 type="button"
                 variant="outline"
                 className="w-full sm:w-auto"
-                onClick={() => navigate("/admin/products")}
+                onClick={() => requestLeave(() => navigate("/admin/products"))}
               >
                 Cancel
               </Button>
@@ -131,6 +139,7 @@ const AddProductPage = () => {
           </div>
         </div>
       </form>
+      <ConfirmDialog {...leaveDialog} />
     </FormProvider>
   );
 };

@@ -29,6 +29,8 @@ import {
 } from "@/modules/products/schema";
 import { buildAttributesSchema } from "@/modules/products/config/build-attributes-schema";
 import { generateSlug } from "@/lib/slugify";
+import { useFormChanges, useUnsavedChanges } from "@/hooks/useUnsavedChanges";
+import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 
 const EditProductPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -54,6 +56,9 @@ const EditProductPage = () => {
     },
   });
 
+  const { changed, markClean } = useFormChanges(methods);
+  const { bypass, requestLeave, leaveDialog } = useUnsavedChanges(changed);
+
   useEffect(() => {
     if (!product) return;
     methods.reset({
@@ -77,7 +82,8 @@ const EditProductPage = () => {
         images,
       })),
     });
-  }, [product, methods]);
+    markClean();
+  }, [product, methods, markClean]);
 
   const onSubmit = (data: ProductFormValues) => {
     if (!id) return;
@@ -118,7 +124,12 @@ const EditProductPage = () => {
 
     updateProduct.mutate(
       { id, payload },
-      { onSuccess: () => navigate("/admin/products") },
+      {
+        onSuccess: () => {
+          bypass.current = true;
+          navigate("/admin/products");
+        },
+      },
     );
   };
 
@@ -157,7 +168,7 @@ const EditProductPage = () => {
                 type="button"
                 variant="outline"
                 className="w-full sm:w-auto"
-                onClick={() => navigate("/admin/products")}
+                onClick={() => requestLeave(() => navigate("/admin/products"))}
               >
                 Cancel
               </Button>
@@ -172,6 +183,7 @@ const EditProductPage = () => {
           </div>
         </div>
       </form>
+      <ConfirmDialog {...leaveDialog} />
     </FormProvider>
   );
 };
